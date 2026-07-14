@@ -1,0 +1,30 @@
+{
+  "domain": "finance",
+  "version": "1.0.0",
+  "description": "Semantic grouping of finance slots. A group is the unit of CASCADE detection: a CASCADE requires >=3 slots from the SAME semantic group changing due to one root event (serves C2). Every slot in finance_slots.json belongs to exactly one group.",
+  "group_count": 8,
+  "slot_count": 22,
+  "groups": {
+    "card_identity": ["card_last_four", "card_type", "card_holder_name"],
+    "bill_info": ["bill_amount", "due_date", "minimum_payment"],
+    "autopay_config": ["autopay", "autopay_bank", "autopay_date"],
+    "credit_config": ["credit_limit", "temp_limit"],
+    "contact_info": ["phone", "email", "address"],
+    "fraud_info": ["fraud_report_id", "fraud_amount", "dispute_status"],
+    "loan_info": ["loan_amount", "loan_term", "loan_purpose"],
+    "customer_profile": ["income", "occupation"]
+  },
+  "cascade_eligible_groups": [
+    "card_identity",
+    "bill_info",
+    "autopay_config",
+    "contact_info",
+    "fraud_info",
+    "loan_info"
+  ],
+  "cascade_ineligible_groups": [
+    "credit_config",
+    "customer_profile"
+  ],
+  "cascade_eligibility_note": "CASCADE requires >=3 slots in the same group changing together. Groups with only 2 slots (credit_config, customer_profile) cannot by themselves satisfy the >=3-slot criterion and are therefore CASCADE-ineligible as single-group cascades."
+}

@@ -1,6 +1,6 @@
 # FACT-Bench: An Operation-Level Diagnostic Paradigm for Task-Oriented Dialogue Agents
 
-> **Version**: v0.1 (pre-release, active development)  
+> **Version**: v1.0 (pre-release, active development)  
 > **Target Venue**: ACL 2027 / EMNLP 2027  
 > **Status**: Phase 1 of 6 (infrastructure & ontology)
 

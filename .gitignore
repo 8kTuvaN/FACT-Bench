@@ -41,3 +41,8 @@ logs/
 
 # API keys (redundant with .env but safe)
 config/secrets.yaml
+
+# Local-only working files
+.claude/
+CLAUDE.md
+paper/audit_log.md

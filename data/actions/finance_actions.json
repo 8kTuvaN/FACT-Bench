@@ -1,0 +1,143 @@
+{
+  "domain": "finance",
+  "version": "1.0.0",
+  "description": "Finance domain action schema library for FACT-Bench. 15 actions. Each action declares required_params/optional_params (referencing slots in finance_slots.json), preconditions, side_effects (slot writes), and an automatable flag. Serves C3 (action grounding / taxonomy) and C4 (SOTA action-planning evaluation). param and side_effect slot names must resolve against data/slots/finance_slots.json.",
+  "action_count": 15,
+  "actions": {
+    "verify_identity": {
+      "name": "verify_identity",
+      "description": "Authenticate the customer before any account-modifying action.",
+      "required_params": ["card_last_four", "card_holder_name"],
+      "optional_params": ["phone"],
+      "preconditions": [],
+      "side_effects": [],
+      "automatable": true
+    },
+    "check_balance": {
+      "name": "check_balance",
+      "description": "Retrieve the current statement balance and minimum payment.",
+      "required_params": ["card_last_four"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": [],
+      "automatable": true
+    },
+    "make_payment": {
+      "name": "make_payment",
+      "description": "Post a payment against the current bill.",
+      "required_params": ["card_last_four", "bill_amount"],
+      "optional_params": ["autopay_bank"],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["bill_amount", "minimum_payment"],
+      "automatable": true
+    },
+    "update_contact_info": {
+      "name": "update_contact_info",
+      "description": "Update one or more customer contact fields.",
+      "required_params": [],
+      "optional_params": ["phone", "email", "address"],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["phone", "email", "address"],
+      "automatable": true
+    },
+    "enable_autopay": {
+      "name": "enable_autopay",
+      "description": "Enable automatic payment, setting funding bank and run date.",
+      "required_params": ["autopay_bank", "autopay_date"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["autopay", "autopay_bank", "autopay_date"],
+      "automatable": true
+    },
+    "disable_autopay": {
+      "name": "disable_autopay",
+      "description": "Disable automatic payment and clear its configuration.",
+      "required_params": [],
+      "optional_params": [],
+      "preconditions": ["verify_identity", "enable_autopay"],
+      "side_effects": ["autopay", "autopay_bank", "autopay_date"],
+      "automatable": true
+    },
+    "request_credit_limit_increase": {
+      "name": "request_credit_limit_increase",
+      "description": "Submit a request to raise the permanent credit limit.",
+      "required_params": ["credit_limit", "income"],
+      "optional_params": ["occupation"],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["credit_limit"],
+      "automatable": false
+    },
+    "set_temporary_limit": {
+      "name": "set_temporary_limit",
+      "description": "Grant a temporary credit limit increase.",
+      "required_params": ["temp_limit"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["temp_limit"],
+      "automatable": true
+    },
+    "report_fraud": {
+      "name": "report_fraud",
+      "description": "File a fraud report for a disputed transaction.",
+      "required_params": ["card_last_four", "fraud_amount"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["fraud_report_id", "fraud_amount", "dispute_status"],
+      "automatable": false
+    },
+    "dispute_transaction": {
+      "name": "dispute_transaction",
+      "description": "Open a formal dispute tied to an existing fraud report.",
+      "required_params": ["fraud_report_id"],
+      "optional_params": ["fraud_amount"],
+      "preconditions": ["report_fraud"],
+      "side_effects": ["dispute_status"],
+      "automatable": false
+    },
+    "check_dispute_status": {
+      "name": "check_dispute_status",
+      "description": "Look up the resolution status of an open dispute.",
+      "required_params": ["fraud_report_id"],
+      "optional_params": [],
+      "preconditions": ["verify_identity", "report_fraud"],
+      "side_effects": [],
+      "automatable": true
+    },
+    "issue_replacement_card": {
+      "name": "issue_replacement_card",
+      "description": "Issue a replacement card (e.g., after fraud or loss).",
+      "required_params": ["card_last_four", "address"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["card_last_four"],
+      "automatable": false
+    },
+    "apply_for_loan": {
+      "name": "apply_for_loan",
+      "description": "Submit a personal loan application.",
+      "required_params": ["loan_amount", "loan_term", "loan_purpose", "income"],
+      "optional_params": ["occupation"],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["loan_amount", "loan_term", "loan_purpose"],
+      "automatable": false
+    },
+    "check_loan_status": {
+      "name": "check_loan_status",
+      "description": "Retrieve the status of a submitted loan application.",
+      "required_params": [],
+      "optional_params": [],
+      "preconditions": ["verify_identity", "apply_for_loan"],
+      "side_effects": [],
+      "automatable": true
+    },
+    "escalate_to_human": {
+      "name": "escalate_to_human",
+      "description": "Hand off the conversation to a human agent.",
+      "required_params": [],
+      "optional_params": ["fraud_report_id"],
+      "preconditions": [],
+      "side_effects": [],
+      "automatable": false
+    }
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "domain": "telecom",
+  "version": "1.0.0",
+  "description": "Telecom domain action schema library for FACT-Bench. 15 actions. Each action declares required_params/optional_params (referencing slots in telecom_slots.json), preconditions, side_effects (slot writes), and an automatable flag. Serves C3 (action grounding / taxonomy) and C4 (SOTA action-planning evaluation). param and side_effect slot names must resolve against data/slots/telecom_slots.json.",
+  "action_count": 15,
+  "actions": {
+    "verify_identity": {
+      "name": "verify_identity",
+      "description": "Authenticate the customer before any account-modifying action.",
+      "required_params": ["phone"],
+      "optional_params": ["email", "imei"],
+      "preconditions": [],
+      "side_effects": [],
+      "automatable": true
+    },
+    "check_data_usage": {
+      "name": "check_data_usage",
+      "description": "Retrieve remaining data against the plan allowance.",
+      "required_params": ["phone"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": [],
+      "automatable": true
+    },
+    "change_plan": {
+      "name": "change_plan",
+      "description": "Switch the subscriber to a different plan tier.",
+      "required_params": ["plan_name"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["plan_name", "plan_price", "data_allowance"],
+      "automatable": true
+    },
+    "add_addon": {
+      "name": "add_addon",
+      "description": "Subscribe the customer to a value-added add-on.",
+      "required_params": ["addon_name"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["addon_name", "addon_price", "addon_status"],
+      "automatable": true
+    },
+    "remove_addon": {
+      "name": "remove_addon",
+      "description": "Cancel an active add-on subscription.",
+      "required_params": ["addon_name"],
+      "optional_params": [],
+      "preconditions": ["verify_identity", "add_addon"],
+      "side_effects": ["addon_status"],
+      "automatable": true
+    },
+    "update_contact_info": {
+      "name": "update_contact_info",
+      "description": "Update one or more customer contact fields.",
+      "required_params": [],
+      "optional_params": ["phone", "email", "address"],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["phone", "email", "address"],
+      "automatable": true
+    },
+    "suspend_service": {
+      "name": "suspend_service",
+      "description": "Temporarily suspend the mobile service line.",
+      "required_params": ["phone"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["service_status"],
+      "automatable": true
+    },
+    "resume_service": {
+      "name": "resume_service",
+      "description": "Reactivate a suspended service line.",
+      "required_params": ["phone"],
+      "optional_params": [],
+      "preconditions": ["verify_identity", "suspend_service"],
+      "side_effects": ["service_status"],
+      "automatable": true
+    },
+    "activate_device": {
+      "name": "activate_device",
+      "description": "Activate a new device on the customer's line.",
+      "required_params": ["imei", "device_model"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["device_model", "imei", "activation_date", "service_status"],
+      "automatable": false
+    },
+    "report_lost_device": {
+      "name": "report_lost_device",
+      "description": "Report a device lost/stolen and lock the line.",
+      "required_params": ["imei"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["service_status"],
+      "automatable": false
+    },
+    "upgrade_device": {
+      "name": "upgrade_device",
+      "description": "Upgrade to a new device under an installment agreement.",
+      "required_params": ["device_model", "device_installment"],
+      "optional_params": ["imei"],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["device_model", "imei", "device_installment"],
+      "automatable": false
+    },
+    "pay_bill": {
+      "name": "pay_bill",
+      "description": "Post a payment against the current telecom bill.",
+      "required_params": ["billing_amount", "payment_method"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["billing_amount"],
+      "automatable": true
+    },
+    "change_billing_cycle": {
+      "name": "change_billing_cycle",
+      "description": "Change the billing cycle frequency.",
+      "required_params": ["billing_cycle"],
+      "optional_params": ["payment_method"],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["billing_cycle", "payment_method"],
+      "automatable": true
+    },
+    "check_contract_status": {
+      "name": "check_contract_status",
+      "description": "Retrieve remaining contract term and commitment details.",
+      "required_params": ["phone"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": [],
+      "automatable": true
+    },
+    "escalate_to_human": {
+      "name": "escalate_to_human",
+      "description": "Hand off the conversation to a human agent.",
+      "required_params": [],
+      "optional_params": ["imei"],
+      "preconditions": [],
+      "side_effects": [],
+      "automatable": false
+    }
+  }
+}

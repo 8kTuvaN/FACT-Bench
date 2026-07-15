@@ -1,0 +1,25 @@
+{
+  "domain": "telecom",
+  "version": "1.0.0",
+  "description": "Semantic grouping of telecom slots. A group is the unit of CASCADE detection: a CASCADE requires >=3 slots from the SAME semantic group changing due to one root event (serves C2). Every slot in telecom_slots.json belongs to exactly one group. All six groups hold 3 slots, so all six are CASCADE-eligible.",
+  "group_count": 6,
+  "slot_count": 18,
+  "groups": {
+    "plan_spec": ["plan_name", "plan_price", "data_allowance"],
+    "addon_config": ["addon_name", "addon_price", "addon_status"],
+    "device_info": ["device_model", "imei", "device_installment"],
+    "contact_info": ["phone", "email", "address"],
+    "service_info": ["service_status", "activation_date", "contract_term"],
+    "billing_info": ["billing_amount", "billing_cycle", "payment_method"]
+  },
+  "cascade_eligible_groups": [
+    "plan_spec",
+    "addon_config",
+    "device_info",
+    "contact_info",
+    "service_info",
+    "billing_info"
+  ],
+  "cascade_ineligible_groups": [],
+  "cascade_eligibility_note": "CASCADE requires >=3 slots in the same group changing together. Every telecom group has exactly 3 slots, so all six are CASCADE-eligible. Example: changing plan_name typically cascades plan_price and data_allowance (plan_spec)."
+}

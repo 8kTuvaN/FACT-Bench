@@ -1,0 +1,189 @@
+{
+  "domain": "telecom",
+  "version": "1.0.0",
+  "description": "Telecom domain slot ontology for FACT-Bench. 18 slots across 6 semantic groups. Each slot supports ADD/MODIFY/DELETE/KEEP/CASCADE operation labeling (serves C1); semantic groups enable multi-slot CASCADE detection (serves C2); slots are the atomic building blocks for template synthesis (serves C5). Note: contact_info mirrors the finance contact_info group but is scoped independently to this domain.",
+  "slot_count": 18,
+  "semantic_group_count": 6,
+  "slots": {
+    "plan_name": {
+      "name": "plan_name",
+      "type": "enum",
+      "semantic_group": "plan_spec",
+      "description": "Name/tier of the subscribed mobile plan.",
+      "validation": {"enum": ["Basic", "Standard", "Premium", "Unlimited"]},
+      "enum": ["Basic", "Standard", "Premium", "Unlimited"],
+      "default": "Basic",
+      "example": "Premium"
+    },
+    "plan_price": {
+      "name": "plan_price",
+      "type": "float",
+      "semantic_group": "plan_spec",
+      "description": "Monthly recurring price of the plan.",
+      "validation": {"min": 0.0, "max": 10000.0},
+      "enum": null,
+      "default": null,
+      "example": 59.99
+    },
+    "data_allowance": {
+      "name": "data_allowance",
+      "type": "integer",
+      "semantic_group": "plan_spec",
+      "description": "Monthly data allowance in GB (0 = unlimited).",
+      "validation": {"min": 0, "max": 10000},
+      "enum": null,
+      "default": null,
+      "example": 50
+    },
+    "addon_name": {
+      "name": "addon_name",
+      "type": "enum",
+      "semantic_group": "addon_config",
+      "description": "Name of the value-added service add-on.",
+      "validation": {"enum": ["international_roaming", "extra_data", "device_insurance", "streaming_pack", "voicemail_plus"]},
+      "enum": ["international_roaming", "extra_data", "device_insurance", "streaming_pack", "voicemail_plus"],
+      "default": null,
+      "example": "international_roaming"
+    },
+    "addon_price": {
+      "name": "addon_price",
+      "type": "float",
+      "semantic_group": "addon_config",
+      "description": "Monthly price of the subscribed add-on.",
+      "validation": {"min": 0.0, "max": 10000.0},
+      "enum": null,
+      "default": null,
+      "example": 9.99
+    },
+    "addon_status": {
+      "name": "addon_status",
+      "type": "enum",
+      "semantic_group": "addon_config",
+      "description": "Subscription status of the add-on.",
+      "validation": {"enum": ["active", "pending", "cancelled"]},
+      "enum": ["active", "pending", "cancelled"],
+      "default": null,
+      "example": "active"
+    },
+    "device_model": {
+      "name": "device_model",
+      "type": "string",
+      "semantic_group": "device_info",
+      "description": "Model name of the customer's device.",
+      "validation": {"regex": "^.{2,60}$"},
+      "enum": null,
+      "default": null,
+      "example": "Galaxy S25"
+    },
+    "imei": {
+      "name": "imei",
+      "type": "string",
+      "semantic_group": "device_info",
+      "description": "15-digit International Mobile Equipment Identity number.",
+      "validation": {"regex": "^\\d{15}$"},
+      "enum": null,
+      "default": null,
+      "example": "356938035643809"
+    },
+    "device_installment": {
+      "name": "device_installment",
+      "type": "float",
+      "semantic_group": "device_info",
+      "description": "Remaining monthly device installment amount.",
+      "validation": {"min": 0.0, "max": 100000.0},
+      "enum": null,
+      "default": null,
+      "example": 33.29
+    },
+    "phone": {
+      "name": "phone",
+      "type": "string",
+      "semantic_group": "contact_info",
+      "description": "Customer mobile phone number (the service line).",
+      "validation": {"regex": "^1[3-9]\\d{9}$"},
+      "enum": null,
+      "default": null,
+      "example": "13800138000"
+    },
+    "email": {
+      "name": "email",
+      "type": "string",
+      "semantic_group": "contact_info",
+      "description": "Customer email address for account correspondence.",
+      "validation": {"regex": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"},
+      "enum": null,
+      "default": null,
+      "example": "alex.chen@example.com"
+    },
+    "address": {
+      "name": "address",
+      "type": "string",
+      "semantic_group": "contact_info",
+      "description": "Customer service/billing address.",
+      "validation": {"regex": "^.{5,120}$"},
+      "enum": null,
+      "default": null,
+      "example": "88 Market Street, San Jose, CA 95113"
+    },
+    "service_status": {
+      "name": "service_status",
+      "type": "enum",
+      "semantic_group": "service_info",
+      "description": "Current activation status of the mobile service.",
+      "validation": {"enum": ["active", "suspended", "terminated"]},
+      "enum": ["active", "suspended", "terminated"],
+      "default": "active",
+      "example": "suspended"
+    },
+    "activation_date": {
+      "name": "activation_date",
+      "type": "date",
+      "semantic_group": "service_info",
+      "description": "Date the service line was activated.",
+      "validation": {"format": "YYYY-MM-DD", "regex": "^\\d{4}-\\d{2}-\\d{2}$"},
+      "enum": null,
+      "default": null,
+      "example": "2025-11-03"
+    },
+    "contract_term": {
+      "name": "contract_term",
+      "type": "integer",
+      "semantic_group": "service_info",
+      "description": "Contract commitment length in months (0 = no contract).",
+      "validation": {"min": 0, "max": 60},
+      "enum": null,
+      "default": null,
+      "example": 24
+    },
+    "billing_amount": {
+      "name": "billing_amount",
+      "type": "float",
+      "semantic_group": "billing_info",
+      "description": "Current monthly bill amount.",
+      "validation": {"min": 0.0, "max": 1000000.0},
+      "enum": null,
+      "default": null,
+      "example": 72.48
+    },
+    "billing_cycle": {
+      "name": "billing_cycle",
+      "type": "enum",
+      "semantic_group": "billing_info",
+      "description": "Billing cycle frequency.",
+      "validation": {"enum": ["monthly", "quarterly", "annual"]},
+      "enum": ["monthly", "quarterly", "annual"],
+      "default": "monthly",
+      "example": "monthly"
+    },
+    "payment_method": {
+      "name": "payment_method",
+      "type": "enum",
+      "semantic_group": "billing_info",
+      "description": "Method used for bill payment.",
+      "validation": {"enum": ["credit_card", "bank_transfer", "e_wallet", "invoice"]},
+      "enum": ["credit_card", "bank_transfer", "e_wallet", "invoice"],
+      "default": null,
+      "example": "credit_card"
+    }
+  }
+}

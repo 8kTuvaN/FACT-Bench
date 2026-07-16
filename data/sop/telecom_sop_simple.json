@@ -9,7 +9,7 @@
       "id": "TS-01",
       "name": "Identity verification required",
       "description": "No account-modifying action may execute before verify_identity has succeeded.",
-      "applies_to_actions": ["check_data_usage", "change_plan", "add_addon", "remove_addon", "update_contact_info", "suspend_service", "resume_service", "activate_device", "report_lost_device", "upgrade_device", "pay_bill", "change_billing_cycle", "check_contract_status"],
+      "applies_to_actions": ["check_data_usage", "change_plan", "add_addon", "remove_addon", "update_contact_info", "suspend_service", "resume_service", "activate_device", "report_lost_device", "upgrade_device", "pay_bill", "change_billing_cycle", "check_contract_status", "dispute_bill"],
       "requires_slots": ["phone"],
       "constraint": "verify_identity MUST appear earlier in the dialogue before any of applies_to_actions."
     },

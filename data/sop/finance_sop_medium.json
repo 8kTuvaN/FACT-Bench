@@ -50,10 +50,10 @@
     {
       "id": "FM-06",
       "name": "Credit-limit increase requires employment disclosure",
-      "description": "request_credit_limit_increase requires both income and occupation to be set (full customer_profile group disclosed).",
-      "applies_to_actions": ["request_credit_limit_increase"],
+      "description": "request_credit_limit_increase requires both income and occupation to be set (full customer_profile group disclosed) AND two-factor authentication via verify_identity_tfa before submission.",
+      "applies_to_actions": ["request_credit_limit_increase", "verify_identity_tfa"],
       "requires_slots": ["income", "occupation"],
-      "constraint": "income AND occupation are both non-null at submission time. Missing occupation is a SOP violation."
+      "constraint": "income AND occupation are both non-null at submission time AND verify_identity_tfa has succeeded earlier in the dialogue. Missing occupation OR absent TFA is a SOP violation."
     }
   ]
 }

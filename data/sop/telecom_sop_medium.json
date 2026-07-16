@@ -34,10 +34,10 @@
     {
       "id": "TM-04",
       "name": "Lost device report must immediately suspend line",
-      "description": "report_lost_device must transition service_status to 'suspended' in the same action plan. A report that leaves the line active is a security/SOP violation.",
-      "applies_to_actions": ["report_lost_device"],
+      "description": "report_lost_device must transition service_status to 'suspended' in the same action plan. A report that leaves the line active is a security/SOP violation. report_outage (the parallel outage scenario) must produce a non-null outage_ticket_id; it does NOT touch service_status and is a separate flow.",
+      "applies_to_actions": ["report_lost_device", "report_outage"],
       "requires_slots": ["service_status"],
-      "constraint": "After report_lost_device: service_status == 'suspended'."
+      "constraint": "After report_lost_device: service_status == 'suspended'. report_outage is independent of service_status but its outage_ticket_id must be non-null."
     },
     {
       "id": "TM-05",

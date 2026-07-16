@@ -9,7 +9,7 @@
       "id": "FS-01",
       "name": "Identity verification required",
       "description": "No account-modifying action may execute before verify_identity has succeeded.",
-      "applies_to_actions": ["check_balance", "make_payment", "update_contact_info", "enable_autopay", "disable_autopay", "request_credit_limit_increase", "set_temporary_limit", "report_fraud", "dispute_transaction", "check_dispute_status", "issue_replacement_card", "apply_for_loan", "check_loan_status"],
+      "applies_to_actions": ["check_balance", "make_payment", "update_contact_info", "enable_autopay", "disable_autopay", "request_credit_limit_increase", "set_temporary_limit", "report_fraud", "dispute_transaction", "check_dispute_status", "issue_replacement_card", "apply_for_loan", "check_loan_status", "verify_identity_tfa", "request_supervisor_approval"],
       "requires_slots": ["card_last_four", "card_holder_name"],
       "constraint": "verify_identity MUST appear earlier in the dialogue before any of applies_to_actions."
     },

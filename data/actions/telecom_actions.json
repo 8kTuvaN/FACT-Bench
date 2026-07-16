@@ -1,8 +1,8 @@
 {
   "domain": "telecom",
-  "version": "1.0.0",
-  "description": "Telecom domain action schema library for FACT-Bench. 15 actions. Each action declares required_params/optional_params (referencing slots in telecom_slots.json), preconditions, side_effects (slot writes), and an automatable flag. Serves C3 (action grounding / taxonomy) and C4 (SOTA action-planning evaluation). param and side_effect slot names must resolve against data/slots/telecom_slots.json.",
-  "action_count": 15,
+  "version": "1.1.0",
+  "description": "Telecom domain action schema library for FACT-Bench. 19 actions (extended from 15 on 2026-07-16 per audit). Includes 15 state-modifying actions and 4 dialogue-flow / outage / dispute extensions (dispute_bill, report_outage, inform_customer, confirm_intent). Each action declares required_params/optional_params (referencing slots in telecom_slots.json OR meta-fields for dialogue-flow/outage/dispute actions), preconditions, side_effects, and an automatable flag. Serves C3 (action grounding / taxonomy) and C4 (SOTA action-planning evaluation).",
+  "action_count": 19,
   "actions": {
     "verify_identity": {
       "name": "verify_identity",
@@ -138,6 +138,42 @@
       "preconditions": [],
       "side_effects": [],
       "automatable": false
+    },
+    "dispute_bill": {
+      "name": "dispute_bill",
+      "description": "Customer disputes a charge on their bill (parallel to pay_bill, low-frequency).",
+      "required_params": ["phone", "billing_amount", "dispute_reason"],
+      "optional_params": ["disputed_transaction_date"],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["create_dispute_status_slot", "notify_fraud_team"],
+      "automatable": false
+    },
+    "report_outage": {
+      "name": "report_outage",
+      "description": "Customer reports network/service outage (parallel to report_lost_device, distinct scenario).",
+      "required_params": ["service_type", "outage_location", "affected_since"],
+      "optional_params": ["affected_devices_count"],
+      "preconditions": [],
+      "side_effects": ["create_outage_ticket_id", "notify_ops_team"],
+      "automatable": true
+    },
+    "inform_customer": {
+      "name": "inform_customer",
+      "description": "Agent delivers information to customer (non-actionable, dialogue-flow).",
+      "required_params": ["message_content"],
+      "optional_params": ["attachment_url", "delivery_channel"],
+      "preconditions": [],
+      "side_effects": [],
+      "automatable": true
+    },
+    "confirm_intent": {
+      "name": "confirm_intent",
+      "description": "Agent asks customer to clarify ambiguous intent (dialogue-flow).",
+      "required_params": ["ambiguous_slot", "candidate_values"],
+      "optional_params": ["disambiguation_question"],
+      "preconditions": [],
+      "side_effects": ["await_user_response"],
+      "automatable": true
     }
   }
 }

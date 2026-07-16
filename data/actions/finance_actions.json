@@ -1,8 +1,8 @@
 {
   "domain": "finance",
-  "version": "1.0.0",
-  "description": "Finance domain action schema library for FACT-Bench. 15 actions. Each action declares required_params/optional_params (referencing slots in finance_slots.json), preconditions, side_effects (slot writes), and an automatable flag. Serves C3 (action grounding / taxonomy) and C4 (SOTA action-planning evaluation). param and side_effect slot names must resolve against data/slots/finance_slots.json.",
-  "action_count": 15,
+  "version": "1.1.0",
+  "description": "Finance domain action schema library for FACT-Bench. 19 actions (extended from 15 on 2026-07-16 per audit). Includes 15 state-modifying actions and 4 dialogue-flow / verification extensions (inform_customer, confirm_intent, verify_identity_tfa, request_supervisor_approval). Each action declares required_params/optional_params (referencing slots in finance_slots.json OR meta-fields for dialogue-flow actions), preconditions, side_effects (slot writes), and an automatable flag. Serves C3 (action grounding / taxonomy) and C4 (SOTA action-planning evaluation).",
+  "action_count": 19,
   "actions": {
     "verify_identity": {
       "name": "verify_identity",
@@ -137,6 +137,42 @@
       "optional_params": ["fraud_report_id"],
       "preconditions": [],
       "side_effects": [],
+      "automatable": false
+    },
+    "inform_customer": {
+      "name": "inform_customer",
+      "description": "Agent delivers information to customer (non-actionable, dialogue-flow).",
+      "required_params": ["message_content"],
+      "optional_params": ["attachment_url", "delivery_channel"],
+      "preconditions": [],
+      "side_effects": [],
+      "automatable": true
+    },
+    "confirm_intent": {
+      "name": "confirm_intent",
+      "description": "Agent asks customer to clarify ambiguous intent (dialogue-flow).",
+      "required_params": ["ambiguous_slot", "candidate_values"],
+      "optional_params": ["disambiguation_question"],
+      "preconditions": [],
+      "side_effects": ["await_user_response"],
+      "automatable": true
+    },
+    "verify_identity_tfa": {
+      "name": "verify_identity_tfa",
+      "description": "Two-factor authentication for sensitive operations (must follow basic verify_identity).",
+      "required_params": ["card_last_four", "tfa_method", "tfa_code"],
+      "optional_params": [],
+      "preconditions": ["verify_identity"],
+      "side_effects": ["set_verified_via_tfa_flag"],
+      "automatable": true
+    },
+    "request_supervisor_approval": {
+      "name": "request_supervisor_approval",
+      "description": "Escalate decision to supervisor (credit increase, large refund, exception).",
+      "required_params": ["request_type", "amount"],
+      "optional_params": ["justification"],
+      "preconditions": ["verify_identity_tfa"],
+      "side_effects": ["create_approval_ticket"],
       "automatable": false
     }
   }

@@ -1,8 +1,9 @@
 {
   "domain": "finance",
-  "version": "1.1.0",
-  "description": "Finance domain action schema library for FACT-Bench. 19 actions (extended from 15 on 2026-07-16 per audit). Includes 15 state-modifying actions and 4 dialogue-flow / verification extensions (inform_customer, confirm_intent, verify_identity_tfa, request_supervisor_approval). Each action declares required_params/optional_params (referencing slots in finance_slots.json OR meta-fields for dialogue-flow actions), preconditions, side_effects (slot writes), and an automatable flag. Serves C3 (action grounding / taxonomy) and C4 (SOTA action-planning evaluation).",
+  "version": "1.2.0",
+  "description": "Finance domain action schema library for FACT-Bench. 19 actions (extended from 15 on 2026-07-16 per audit). Includes 15 state-modifying actions and 4 dialogue-flow / verification extensions (inform_customer, confirm_intent, verify_identity_tfa, request_supervisor_approval). Each action declares required_params/optional_params (referencing slots in finance_slots.json OR meta-fields documented in data/meta_fields/meta_fields.json for dialogue-flow actions), preconditions, side_effects (slot writes), an automatable flag, and a category for analysis grouping (added 2026-07-16 per audit P0). Serves C3 (action grounding / taxonomy) and C4 (SOTA action-planning evaluation).",
   "action_count": 19,
+  "categories": ["query", "modify", "security", "escalation", "informational", "clarification"],
   "actions": {
     "verify_identity": {
       "name": "verify_identity",
@@ -11,7 +12,8 @@
       "optional_params": ["phone"],
       "preconditions": [],
       "side_effects": [],
-      "automatable": true
+      "automatable": true,
+      "category": "security"
     },
     "check_balance": {
       "name": "check_balance",
@@ -20,7 +22,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": [],
-      "automatable": true
+      "automatable": true,
+      "category": "query"
     },
     "make_payment": {
       "name": "make_payment",
@@ -29,7 +32,8 @@
       "optional_params": ["autopay_bank"],
       "preconditions": ["verify_identity"],
       "side_effects": ["bill_amount", "minimum_payment"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "update_contact_info": {
       "name": "update_contact_info",
@@ -38,7 +42,8 @@
       "optional_params": ["phone", "email", "address"],
       "preconditions": ["verify_identity"],
       "side_effects": ["phone", "email", "address"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "enable_autopay": {
       "name": "enable_autopay",
@@ -47,7 +52,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": ["autopay", "autopay_bank", "autopay_date"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "disable_autopay": {
       "name": "disable_autopay",
@@ -56,7 +62,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity", "enable_autopay"],
       "side_effects": ["autopay", "autopay_bank", "autopay_date"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "request_credit_limit_increase": {
       "name": "request_credit_limit_increase",
@@ -65,7 +72,8 @@
       "optional_params": ["occupation"],
       "preconditions": ["verify_identity"],
       "side_effects": ["credit_limit"],
-      "automatable": false
+      "automatable": false,
+      "category": "escalation"
     },
     "set_temporary_limit": {
       "name": "set_temporary_limit",
@@ -74,7 +82,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": ["temp_limit"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "report_fraud": {
       "name": "report_fraud",
@@ -83,7 +92,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": ["fraud_report_id", "fraud_amount", "dispute_status"],
-      "automatable": false
+      "automatable": false,
+      "category": "escalation"
     },
     "dispute_transaction": {
       "name": "dispute_transaction",
@@ -92,7 +102,8 @@
       "optional_params": ["fraud_amount"],
       "preconditions": ["report_fraud"],
       "side_effects": ["dispute_status"],
-      "automatable": false
+      "automatable": false,
+      "category": "escalation"
     },
     "check_dispute_status": {
       "name": "check_dispute_status",
@@ -101,7 +112,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity", "report_fraud"],
       "side_effects": [],
-      "automatable": true
+      "automatable": true,
+      "category": "query"
     },
     "issue_replacement_card": {
       "name": "issue_replacement_card",
@@ -110,7 +122,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": ["card_last_four"],
-      "automatable": false
+      "automatable": false,
+      "category": "modify"
     },
     "apply_for_loan": {
       "name": "apply_for_loan",
@@ -119,7 +132,8 @@
       "optional_params": ["occupation"],
       "preconditions": ["verify_identity"],
       "side_effects": ["loan_amount", "loan_term", "loan_purpose"],
-      "automatable": false
+      "automatable": false,
+      "category": "escalation"
     },
     "check_loan_status": {
       "name": "check_loan_status",
@@ -128,7 +142,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity", "apply_for_loan"],
       "side_effects": [],
-      "automatable": true
+      "automatable": true,
+      "category": "query"
     },
     "escalate_to_human": {
       "name": "escalate_to_human",
@@ -137,7 +152,8 @@
       "optional_params": ["fraud_report_id"],
       "preconditions": [],
       "side_effects": [],
-      "automatable": false
+      "automatable": false,
+      "category": "escalation"
     },
     "inform_customer": {
       "name": "inform_customer",
@@ -146,7 +162,8 @@
       "optional_params": ["attachment_url", "delivery_channel"],
       "preconditions": [],
       "side_effects": [],
-      "automatable": true
+      "automatable": true,
+      "category": "informational"
     },
     "confirm_intent": {
       "name": "confirm_intent",
@@ -155,7 +172,8 @@
       "optional_params": ["disambiguation_question"],
       "preconditions": [],
       "side_effects": ["await_user_response"],
-      "automatable": true
+      "automatable": true,
+      "category": "clarification"
     },
     "verify_identity_tfa": {
       "name": "verify_identity_tfa",
@@ -164,7 +182,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": ["set_verified_via_tfa_flag"],
-      "automatable": true
+      "automatable": true,
+      "category": "security"
     },
     "request_supervisor_approval": {
       "name": "request_supervisor_approval",
@@ -173,7 +192,8 @@
       "optional_params": ["justification"],
       "preconditions": ["verify_identity_tfa"],
       "side_effects": ["create_approval_ticket"],
-      "automatable": false
+      "automatable": false,
+      "category": "escalation"
     }
   }
 }

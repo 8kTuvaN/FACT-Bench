@@ -1,8 +1,9 @@
 {
   "domain": "telecom",
-  "version": "1.1.0",
-  "description": "Telecom domain action schema library for FACT-Bench. 19 actions (extended from 15 on 2026-07-16 per audit). Includes 15 state-modifying actions and 4 dialogue-flow / outage / dispute extensions (dispute_bill, report_outage, inform_customer, confirm_intent). Each action declares required_params/optional_params (referencing slots in telecom_slots.json OR meta-fields for dialogue-flow/outage/dispute actions), preconditions, side_effects, and an automatable flag. Serves C3 (action grounding / taxonomy) and C4 (SOTA action-planning evaluation).",
+  "version": "1.2.0",
+  "description": "Telecom domain action schema library for FACT-Bench. 19 actions (extended from 15 on 2026-07-16 per audit). Includes 15 state-modifying actions and 4 dialogue-flow / outage / dispute extensions (dispute_bill, report_outage, inform_customer, confirm_intent). Each action declares required_params/optional_params (referencing slots in telecom_slots.json OR meta-fields documented in data/meta_fields/meta_fields.json for dialogue-flow/outage/dispute actions), preconditions, side_effects, an automatable flag, and a category for analysis grouping (added 2026-07-16 per audit P0). Serves C3 (action grounding / taxonomy) and C4 (SOTA action-planning evaluation).",
   "action_count": 19,
+  "categories": ["query", "modify", "security", "escalation", "informational", "clarification"],
   "actions": {
     "verify_identity": {
       "name": "verify_identity",
@@ -11,7 +12,8 @@
       "optional_params": ["email", "imei"],
       "preconditions": [],
       "side_effects": [],
-      "automatable": true
+      "automatable": true,
+      "category": "security"
     },
     "check_data_usage": {
       "name": "check_data_usage",
@@ -20,7 +22,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": [],
-      "automatable": true
+      "automatable": true,
+      "category": "query"
     },
     "change_plan": {
       "name": "change_plan",
@@ -29,7 +32,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": ["plan_name", "plan_price", "data_allowance"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "add_addon": {
       "name": "add_addon",
@@ -38,7 +42,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": ["addon_name", "addon_price", "addon_status"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "remove_addon": {
       "name": "remove_addon",
@@ -47,7 +52,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity", "add_addon"],
       "side_effects": ["addon_status"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "update_contact_info": {
       "name": "update_contact_info",
@@ -56,7 +62,8 @@
       "optional_params": ["phone", "email", "address"],
       "preconditions": ["verify_identity"],
       "side_effects": ["phone", "email", "address"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "suspend_service": {
       "name": "suspend_service",
@@ -65,7 +72,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": ["service_status"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "resume_service": {
       "name": "resume_service",
@@ -74,7 +82,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity", "suspend_service"],
       "side_effects": ["service_status"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "activate_device": {
       "name": "activate_device",
@@ -83,7 +92,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": ["device_model", "imei", "activation_date", "service_status"],
-      "automatable": false
+      "automatable": false,
+      "category": "modify"
     },
     "report_lost_device": {
       "name": "report_lost_device",
@@ -92,7 +102,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": ["service_status"],
-      "automatable": false
+      "automatable": false,
+      "category": "modify"
     },
     "upgrade_device": {
       "name": "upgrade_device",
@@ -101,7 +112,8 @@
       "optional_params": ["imei"],
       "preconditions": ["verify_identity"],
       "side_effects": ["device_model", "imei", "device_installment"],
-      "automatable": false
+      "automatable": false,
+      "category": "modify"
     },
     "pay_bill": {
       "name": "pay_bill",
@@ -110,7 +122,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": ["billing_amount"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "change_billing_cycle": {
       "name": "change_billing_cycle",
@@ -119,7 +132,8 @@
       "optional_params": ["payment_method"],
       "preconditions": ["verify_identity"],
       "side_effects": ["billing_cycle", "payment_method"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "check_contract_status": {
       "name": "check_contract_status",
@@ -128,7 +142,8 @@
       "optional_params": [],
       "preconditions": ["verify_identity"],
       "side_effects": [],
-      "automatable": true
+      "automatable": true,
+      "category": "query"
     },
     "escalate_to_human": {
       "name": "escalate_to_human",
@@ -137,7 +152,8 @@
       "optional_params": ["imei"],
       "preconditions": [],
       "side_effects": [],
-      "automatable": false
+      "automatable": false,
+      "category": "escalation"
     },
     "dispute_bill": {
       "name": "dispute_bill",
@@ -146,7 +162,8 @@
       "optional_params": ["disputed_transaction_date"],
       "preconditions": ["verify_identity"],
       "side_effects": ["create_dispute_status_slot", "notify_fraud_team"],
-      "automatable": false
+      "automatable": false,
+      "category": "escalation"
     },
     "report_outage": {
       "name": "report_outage",
@@ -155,7 +172,8 @@
       "optional_params": ["affected_devices_count"],
       "preconditions": [],
       "side_effects": ["create_outage_ticket_id", "notify_ops_team"],
-      "automatable": true
+      "automatable": true,
+      "category": "modify"
     },
     "inform_customer": {
       "name": "inform_customer",
@@ -164,7 +182,8 @@
       "optional_params": ["attachment_url", "delivery_channel"],
       "preconditions": [],
       "side_effects": [],
-      "automatable": true
+      "automatable": true,
+      "category": "informational"
     },
     "confirm_intent": {
       "name": "confirm_intent",
@@ -173,7 +192,8 @@
       "optional_params": ["disambiguation_question"],
       "preconditions": [],
       "side_effects": ["await_user_response"],
-      "automatable": true
+      "automatable": true,
+      "category": "clarification"
     }
   }
 }

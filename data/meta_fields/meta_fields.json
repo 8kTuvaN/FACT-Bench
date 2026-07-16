@@ -1,0 +1,201 @@
+{
+  "domain": "shared",
+  "version": "1.0.0",
+  "description": "Meta-fields: action parameters and side effects that are NOT dialogue state. Slots (in finance_slots.json and telecom_slots.json) represent state that persists across turns and is tracked by T1 SOC and T2 SOE. Meta-fields represent transient action inputs (one-time OTP codes, message bodies, dispute reasons) and control signals (await_user_response, notify_team flags) consumed by T3 SAG and T4 MAP but NOT by T1/T2. Mixing meta-fields into required_params without documentation causes evaluation gaps where references cannot be resolved against slot ontology. Documented here per 2026-07-16 audit (P0).",
+  "meta_field_count": 25,
+  "audit_history": {
+    "introduced": "2026-07-16 (commit 6a21940 'Day 4 revision' added dialogue-flow actions whose required_params reference fields outside the slot ontology)",
+    "documented": "2026-07-16 (P0 fix — meta-field model formalized here; future work: migrate required_params to separate control_params field)"
+  },
+  "categories": {
+    "input_parameter": "Data passed into the action that does not persist in dialogue state. Examples: one-time TFA codes, message bodies, candidate values for disambiguation.",
+    "control_signal": "Side-effect or flag that influences dialogue flow but not slot state. Examples: await_user_response (turn handoff), notify_team (back-office alert).",
+    "system_invariant": "Internal flag or ticket reference used by back-office systems. Not dialogue-visible but required for action completeness."
+  },
+  "meta_fields": {
+    "message_content": {
+      "name": "message_content",
+      "type": "string",
+      "category": "input_parameter",
+      "description": "Body text of an agent message (inform_customer).",
+      "used_by_actions": ["inform_customer"]
+    },
+    "attachment_url": {
+      "name": "attachment_url",
+      "type": "string",
+      "category": "input_parameter",
+      "description": "URL to a file attached to a message (inform_customer optional).",
+      "used_by_actions": ["inform_customer"]
+    },
+    "delivery_channel": {
+      "name": "delivery_channel",
+      "type": "enum",
+      "category": "input_parameter",
+      "description": "Channel used to deliver the message (inform_customer optional).",
+      "validation": {"enum": ["sms", "email", "in_app", "voice"]},
+      "used_by_actions": ["inform_customer"]
+    },
+    "ambiguous_slot": {
+      "name": "ambiguous_slot",
+      "type": "slot_reference",
+      "category": "input_parameter",
+      "description": "Name of the slot whose value is ambiguous (confirm_intent).",
+      "note": "Holds a slot name (string) referencing an entry in the domain slot ontology.",
+      "used_by_actions": ["confirm_intent"]
+    },
+    "candidate_values": {
+      "name": "candidate_values",
+      "type": "array",
+      "category": "input_parameter",
+      "description": "List of candidate values for the ambiguous slot (confirm_intent).",
+      "used_by_actions": ["confirm_intent"]
+    },
+    "disambiguation_question": {
+      "name": "disambiguation_question",
+      "type": "string",
+      "category": "input_parameter",
+      "description": "Question text asked to disambiguate the slot (confirm_intent optional).",
+      "used_by_actions": ["confirm_intent"]
+    },
+    "tfa_method": {
+      "name": "tfa_method",
+      "type": "enum",
+      "category": "input_parameter",
+      "description": "Two-factor authentication delivery channel (verify_identity_tfa).",
+      "validation": {"enum": ["sms", "email", "call"]},
+      "used_by_actions": ["verify_identity_tfa"]
+    },
+    "tfa_code": {
+      "name": "tfa_code",
+      "type": "string",
+      "category": "input_parameter",
+      "description": "One-time password entered by user for TFA (verify_identity_tfa).",
+      "validation": {"regex": "^\\d{6}$"},
+      "used_by_actions": ["verify_identity_tfa"]
+    },
+    "set_verified_via_tfa_flag": {
+      "name": "set_verified_via_tfa_flag",
+      "type": "boolean",
+      "category": "system_invariant",
+      "description": "Internal flag set after successful TFA. Acts as a precondition for sensitive actions.",
+      "used_by_actions": ["verify_identity_tfa"]
+    },
+    "request_type": {
+      "name": "request_type",
+      "type": "enum",
+      "category": "input_parameter",
+      "description": "Type of supervisor-approval request (request_supervisor_approval).",
+      "validation": {"enum": ["credit_increase", "large_refund", "exception"]},
+      "used_by_actions": ["request_supervisor_approval"]
+    },
+    "amount": {
+      "name": "amount",
+      "type": "float",
+      "category": "input_parameter",
+      "description": "Monetary amount involved in the request. Distinct from bill_amount (which is state) — amount is the request-time input.",
+      "validation": {"min": 0.0, "max": 10000000.0},
+      "used_by_actions": ["request_supervisor_approval"]
+    },
+    "justification": {
+      "name": "justification",
+      "type": "string",
+      "category": "input_parameter",
+      "description": "Free-text justification for the supervisor-approval request (optional).",
+      "used_by_actions": ["request_supervisor_approval"]
+    },
+    "create_approval_ticket": {
+      "name": "create_approval_ticket",
+      "type": "control_signal",
+      "category": "control_signal",
+      "description": "Creates a back-office approval ticket (request_supervisor_approval side effect).",
+      "used_by_actions": ["request_supervisor_approval"]
+    },
+    "await_user_response": {
+      "name": "await_user_response",
+      "type": "control_signal",
+      "category": "control_signal",
+      "description": "Dialogue-control flag signaling turn handoff back to user (confirm_intent side effect).",
+      "used_by_actions": ["confirm_intent"]
+    },
+    "payment_method": {
+      "name": "payment_method",
+      "type": "enum",
+      "category": "input_parameter",
+      "description": "Method of payment for a transaction (telecom pay_bill required, change_billing_cycle optional).",
+      "validation": {"enum": ["card", "bank_transfer", "autopay"]},
+      "used_by_actions": ["pay_bill", "change_billing_cycle"]
+    },
+    "dispute_reason": {
+      "name": "dispute_reason",
+      "type": "string",
+      "category": "input_parameter",
+      "description": "Reason for disputing a bill charge (telecom dispute_bill).",
+      "validation": {"enum": ["unauthorized", "duplicate", "service_not_received", "overcharge", "other"]},
+      "used_by_actions": ["dispute_bill"]
+    },
+    "disputed_transaction_date": {
+      "name": "disputed_transaction_date",
+      "type": "date",
+      "category": "input_parameter",
+      "description": "Date of the disputed transaction (telecom dispute_bill optional).",
+      "used_by_actions": ["dispute_bill"]
+    },
+    "create_dispute_status_slot": {
+      "name": "create_dispute_status_slot",
+      "type": "control_signal",
+      "category": "control_signal",
+      "description": "Creates a slot tracking the dispute status (telecom dispute_bill side effect). Note: the actual slot name in finance_slots.json is 'dispute_status' (fraud_info group); this control signal is generic.",
+      "used_by_actions": ["dispute_bill"]
+    },
+    "notify_fraud_team": {
+      "name": "notify_fraud_team",
+      "type": "control_signal",
+      "category": "control_signal",
+      "description": "Triggers notification to the fraud investigation team (telecom dispute_bill side effect).",
+      "used_by_actions": ["dispute_bill"]
+    },
+    "service_type": {
+      "name": "service_type",
+      "type": "enum",
+      "category": "input_parameter",
+      "description": "Type of telecom service affected by outage (telecom report_outage).",
+      "validation": {"enum": ["network", "data", "voice", "sms"]},
+      "used_by_actions": ["report_outage"]
+    },
+    "outage_location": {
+      "name": "outage_location",
+      "type": "string",
+      "category": "input_parameter",
+      "description": "Geographic or address location of the reported outage (telecom report_outage).",
+      "used_by_actions": ["report_outage"]
+    },
+    "affected_since": {
+      "name": "affected_since",
+      "type": "datetime",
+      "category": "input_parameter",
+      "description": "Timestamp when the outage began (telecom report_outage).",
+      "used_by_actions": ["report_outage"]
+    },
+    "affected_devices_count": {
+      "name": "affected_devices_count",
+      "type": "integer",
+      "category": "input_parameter",
+      "description": "Number of devices affected by the outage (telecom report_outage optional).",
+      "used_by_actions": ["report_outage"]
+    },
+    "create_outage_ticket_id": {
+      "name": "create_outage_ticket_id",
+      "type": "control_signal",
+      "category": "control_signal",
+      "description": "Creates a back-end ticket ID for the outage (telecom report_outage side effect).",
+      "used_by_actions": ["report_outage"]
+    },
+    "notify_ops_team": {
+      "name": "notify_ops_team",
+      "type": "control_signal",
+      "category": "control_signal",
+      "description": "Triggers notification to the network operations team (telecom report_outage side effect).",
+      "used_by_actions": ["report_outage"]
+    }
+  }
+}

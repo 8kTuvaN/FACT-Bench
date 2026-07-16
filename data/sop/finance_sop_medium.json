@@ -1,0 +1,59 @@
+{
+  "domain": "finance",
+  "complexity": "medium",
+  "version": "1.0.0",
+  "description": "Finance domain Medium SOP rules. Inherits all 7 simple SOP rules (FS-01..FS-07) and adds 6 medium-only rules (FM-01..FM-06) for multi-step / conditional logic. Total 13 rules. Used by T5 (SCD). Slot/action references must resolve.",
+  "rule_count": 13,
+  "inherits": ["finance_sop_simple.json"],
+  "additional_rule_count": 6,
+  "additional_rules": [
+    {
+      "id": "FM-01",
+      "name": "Autopay enable triggers payment-method cascade",
+      "description": "enable_autopay must clear ALL three autopay_config slots in one transaction (autopay, autopay_bank, autopay_date) — this is a CASCADE case (serves C2).",
+      "applies_to_actions": ["enable_autopay"],
+      "requires_slots": ["autopay", "autopay_bank", "autopay_date"],
+      "constraint": "After enable_autopay, the autopay_config group must read {autopay='enabled', autopay_bank=<non-null>, autopay_date in '1'-'28'}. If autopay_bank or autopay_date is left null, the CASCADE is incomplete and the rule is violated."
+    },
+    {
+      "id": "FM-02",
+      "name": "Fraud report triggers dispute-status initialization",
+      "description": "report_fraud must initialize the fraud_info group: fraud_report_id set, fraud_amount set, dispute_status='open'. A missing dispute_status='open' after report_fraud is a CASCADE violation.",
+      "applies_to_actions": ["report_fraud"],
+      "requires_slots": ["fraud_report_id", "fraud_amount", "dispute_status"],
+      "constraint": "After report_fraud: dispute_status == 'open' and the full fraud_info group is coherent."
+    },
+    {
+      "id": "FM-03",
+      "name": "High-value fraud must escalate",
+      "description": "If fraud_amount >= 1000, the agent must invoke escalate_to_human either before or after dispute_transaction. Skipping escalation on high-value fraud is a compliance violation.",
+      "applies_to_actions": ["escalate_to_human", "dispute_transaction"],
+      "requires_slots": ["fraud_amount"],
+      "constraint": "fraud_amount >= 1000 implies escalate_to_human is in the action plan."
+    },
+    {
+      "id": "FM-04",
+      "name": "Loan requires identity + income disclosure",
+      "description": "apply_for_loan must follow verify_identity in the same plan, and the income slot must have been set in the customer_profile group during this dialogue.",
+      "applies_to_actions": ["apply_for_loan"],
+      "requires_slots": ["income", "occupation"],
+      "constraint": "verify_identity precedes apply_for_loan AND income is non-null at submission time. Occupation is optional but recommended."
+    },
+    {
+      "id": "FM-05",
+      "name": "Temp limit is subordinate to permanent limit",
+      "description": "set_temporary_limit must not set temp_limit < credit_limit (a temp limit cannot shrink the effective limit below the permanent floor).",
+      "applies_to_actions": ["set_temporary_limit"],
+      "requires_slots": ["credit_limit", "temp_limit"],
+      "constraint": "temp_limit >= credit_limit. Otherwise the SOP is violated."
+    },
+    {
+      "id": "FM-06",
+      "name": "Credit-limit increase requires employment disclosure",
+      "description": "request_credit_limit_increase requires both income and occupation to be set (full customer_profile group disclosed).",
+      "applies_to_actions": ["request_credit_limit_increase"],
+      "requires_slots": ["income", "occupation"],
+      "constraint": "income AND occupation are both non-null at submission time. Missing occupation is a SOP violation."
+    }
+  ]
+}

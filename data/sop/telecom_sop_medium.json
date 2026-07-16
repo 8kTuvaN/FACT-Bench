@@ -1,0 +1,59 @@
+{
+  "domain": "telecom",
+  "complexity": "medium",
+  "version": "1.0.0",
+  "description": "Telecom domain Medium SOP rules. Inherits all 6 simple SOP rules (TS-01..TS-06) and adds 6 medium-only rules (TM-01..TM-06) for multi-step / conditional logic. Total 12 rules. Used by T5 (SCD). Slot/action references must resolve.",
+  "rule_count": 12,
+  "inherits": ["telecom_sop_simple.json"],
+  "additional_rule_count": 6,
+  "additional_rules": [
+    {
+      "id": "TM-01",
+      "name": "Plan change triggers plan_spec cascade",
+      "description": "change_plan must update the entire plan_spec group coherently (plan_name, plan_price, data_allowance all change together). This is a CASCADE case (serves C2).",
+      "applies_to_actions": ["change_plan"],
+      "requires_slots": ["plan_name", "plan_price", "data_allowance"],
+      "constraint": "After change_plan: (plan_name in {Basic,Standard,Premium,Unlimited}) AND (plan_price >= 0) AND (data_allowance >= 0) and the change is internally consistent (e.g., Unlimited implies plan_price >= Premium.price)."
+    },
+    {
+      "id": "TM-02",
+      "name": "Addon subscribe triggers addon_config cascade",
+      "description": "add_addon must set the entire addon_config group (addon_name, addon_price, addon_status='active' or 'pending') in one transaction.",
+      "applies_to_actions": ["add_addon"],
+      "requires_slots": ["addon_name", "addon_price", "addon_status"],
+      "constraint": "After add_addon: addon_status in {active, pending} and addon_price >= 0. The full addon_config group must be coherent."
+    },
+    {
+      "id": "TM-03",
+      "name": "Device activation triggers service + device cascade",
+      "description": "activate_device must set the device_info group AND transition service_info (activation_date set, service_status='active'). Missing service_info update is a CASCADE violation.",
+      "applies_to_actions": ["activate_device"],
+      "requires_slots": ["device_model", "imei", "activation_date", "service_status"],
+      "constraint": "After activate_device: device_info group fully populated AND activation_date non-null AND service_status == 'active'."
+    },
+    {
+      "id": "TM-04",
+      "name": "Lost device report must immediately suspend line",
+      "description": "report_lost_device must transition service_status to 'suspended' in the same action plan. A report that leaves the line active is a security/SOP violation.",
+      "applies_to_actions": ["report_lost_device"],
+      "requires_slots": ["service_status"],
+      "constraint": "After report_lost_device: service_status == 'suspended'."
+    },
+    {
+      "id": "TM-05",
+      "name": "Device upgrade requires installment disclosure",
+      "description": "upgrade_device must set device_model, imei, AND device_installment together. Omitting device_installment is a billing-integrity violation.",
+      "applies_to_actions": ["upgrade_device"],
+      "requires_slots": ["device_model", "imei", "device_installment"],
+      "constraint": "After upgrade_device: device_installment > 0 AND device_model non-null AND imei matches /^\\d{15}$/."
+    },
+    {
+      "id": "TM-06",
+      "name": "Contract status check requires active or suspended status",
+      "description": "check_contract_status requires service_status in {'active','suspended'} — it cannot meaningfully return data for a terminated line.",
+      "applies_to_actions": ["check_contract_status"],
+      "requires_slots": ["service_status", "contract_term"],
+      "constraint": "service_status in {active, suspended} AND contract_term >= 0."
+    }
+  ]
+}

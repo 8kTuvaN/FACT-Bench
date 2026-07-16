@@ -1,0 +1,57 @@
+{
+  "domain": "telecom",
+  "complexity": "simple",
+  "version": "1.0.0",
+  "description": "Telecom domain Simple SOP rules. Each rule states a hard precondition/constraint that a single agent action must satisfy. 6 rules. Slot/action references must resolve against data/slots/telecom_slots.json and data/actions/telecom_actions.json. Used by T5 (SCD).",
+  "rule_count": 6,
+  "rules": [
+    {
+      "id": "TS-01",
+      "name": "Identity verification required",
+      "description": "No account-modifying action may execute before verify_identity has succeeded.",
+      "applies_to_actions": ["check_data_usage", "change_plan", "add_addon", "remove_addon", "update_contact_info", "suspend_service", "resume_service", "activate_device", "report_lost_device", "upgrade_device", "pay_bill", "change_billing_cycle", "check_contract_status"],
+      "requires_slots": ["phone"],
+      "constraint": "verify_identity MUST appear earlier in the dialogue before any of applies_to_actions."
+    },
+    {
+      "id": "TS-02",
+      "name": "Addon removal requires active addon",
+      "description": "remove_addon must not be invoked unless the named addon is currently active (addon_status='active').",
+      "applies_to_actions": ["remove_addon"],
+      "requires_slots": ["addon_name", "addon_status"],
+      "constraint": "addon_status == 'active' for the target addon_name before remove_addon is allowed."
+    },
+    {
+      "id": "TS-03",
+      "name": "Service resume requires suspended status",
+      "description": "resume_service must not be invoked unless service_status is currently 'suspended'.",
+      "applies_to_actions": ["resume_service"],
+      "requires_slots": ["service_status"],
+      "constraint": "service_status == 'suspended' before resume_service is allowed."
+    },
+    {
+      "id": "TS-04",
+      "name": "Device activation requires valid IMEI",
+      "description": "activate_device must carry a 15-digit IMEI and a non-empty device_model.",
+      "applies_to_actions": ["activate_device"],
+      "requires_slots": ["imei", "device_model"],
+      "constraint": "imei matches /^\\d{15}$/ and device_model is a non-empty string."
+    },
+    {
+      "id": "TS-05",
+      "name": "Bill payment must be positive and bounded",
+      "description": "pay_bill amount must be > 0 and <= billing_amount.",
+      "applies_to_actions": ["pay_bill"],
+      "requires_slots": ["billing_amount"],
+      "constraint": "0 < payment_amount <= billing_amount."
+    },
+    {
+      "id": "TS-06",
+      "name": "Billing cycle change requires existing payment method",
+      "description": "change_billing_cycle must not be invoked unless payment_method is already set on the account.",
+      "applies_to_actions": ["change_billing_cycle"],
+      "requires_slots": ["payment_method"],
+      "constraint": "payment_method is non-null before change_billing_cycle is allowed."
+    }
+  ]
+}

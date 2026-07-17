@@ -24,8 +24,10 @@
     {"op": "CASCADE", "group": "service_info", "slots": ["service_status", "activation_date", "contract_term"], "cause": "activate_device transitions service_info (active + activation_date)"},
     {"op": "ADD", "slot": "device_model", "value": "Galaxy S25"},
     {"op": "ADD", "slot": "imei", "value": "356938035643809"},
+    {"op": "KEEP", "slot": "device_installment"},
     {"op": "MODIFY", "slot": "service_status", "old_value": "pending", "new_value": "active"},
-    {"op": "ADD", "slot": "activation_date", "value": "2026-07-17"}
+    {"op": "ADD", "slot": "activation_date", "value": "2026-07-17"},
+    {"op": "KEEP", "slot": "contract_term"}
   ],
   "expected_state_after": {
     "phone": "13800138000",

@@ -254,6 +254,25 @@ def validate(template: dict[str, Any], errors: list[ValidationError]) -> None:
             if (domain, slot) not in slot_idx:
                 errors.append(ValidationError(tid, "slot_ref", f"op {op} on unknown slot '{slot}' for domain {domain}"))
 
+    # -- 4b. CASCADE op-coverage: every slot listed in a CASCADE entry must have
+    #         its own ADD/MODIFY/DELETE/KEEP op in state_operations. Otherwise
+    #         dialogue generators (GPT-4o in W2) might leave the slot untouched,
+    #         producing logically inconsistent state trajectories.
+    ops_on_slots = {
+        o.get("slot")
+        for o in template.get("state_operations", [])
+        if o.get("op") != "CASCADE" and o.get("slot") is not None
+    }
+    for s in cascade_slots:
+        if s not in ops_on_slots:
+            errors.append(
+                ValidationError(
+                    tid,
+                    "cascade_op_coverage",
+                    f"CASCADE slot '{s}' has no individual op entry (CASCADE alone is not enough — declare the per-slot ADD/MODIFY/DELETE/KEEP)",
+                )
+            )
+
     # -- 7. SOP rule ref --
     for rid in (template.get("sop_applicability") or {}).get("rules", []):
         if rid not in sop_idx:

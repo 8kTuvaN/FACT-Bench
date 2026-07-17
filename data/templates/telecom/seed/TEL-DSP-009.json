@@ -1,0 +1,34 @@
+{
+  "template_id": "TEL-DSP-009",
+  "domain": "telecom",
+  "complexity": "complex",
+  "scenario_type": "dispute_bill",
+  "initial_state": {
+    "phone": "13800138000",
+    "billing_amount": 154.30,
+    "payment_method": "credit_card"
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer disputes a $47.50 overage charge on the current $154.30 bill.",
+    "agent_paraphrase": "I shouldn't have been charged $47.50 in overage fees — please dispute it.",
+    "user_persona": "Firm but cooperative."
+  },
+  "agent_action": {
+    "name": "dispute_bill",
+    "params": {
+      "phone": "13800138000",
+      "billing_amount": 154.30,
+      "dispute_reason": "unjustified_overage"
+    }
+  },
+  "state_operations": [
+    {"op": "KEEP", "slot": "billing_amount"},
+    {"op": "KEEP", "slot": "payment_method"}
+  ],
+  "expected_state_after": {
+    "phone": "13800138000",
+    "billing_amount": 154.30,
+    "payment_method": "credit_card"
+  },
+  "sop_applicability": {"rules": ["TS-01", "TS-05"]}
+}

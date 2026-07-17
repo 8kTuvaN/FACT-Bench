@@ -1,0 +1,36 @@
+{
+  "template_id": "FIN-QRY-001",
+  "domain": "finance",
+  "complexity": "simple",
+  "scenario_type": "pure_query",
+  "initial_state": {
+    "card_last_four": "4821",
+    "card_holder_name": "Jordan A. Rivera",
+    "bill_amount": 1284.57,
+    "due_date": "2026-08-15",
+    "minimum_payment": 35.0
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants to check their current credit card balance.",
+    "agent_paraphrase": "Could you tell me what I currently owe on my card ending in 4821?",
+    "user_persona": "Direct, business-like."
+  },
+  "agent_action": {
+    "name": "check_balance",
+    "params": {"card_last_four": "4821"}
+  },
+  "state_operations": [
+    {"op": "KEEP", "slot": "card_last_four"},
+    {"op": "KEEP", "slot": "bill_amount"},
+    {"op": "KEEP", "slot": "due_date"},
+    {"op": "KEEP", "slot": "minimum_payment"}
+  ],
+  "expected_state_after": {
+    "card_last_four": "4821",
+    "card_holder_name": "Jordan A. Rivera",
+    "bill_amount": 1284.57,
+    "due_date": "2026-08-15",
+    "minimum_payment": 35.0
+  },
+  "sop_applicability": {"rules": ["FS-01"]}
+}

@@ -1,0 +1,38 @@
+{
+  "template_id": "TEL-ADD-003",
+  "domain": "telecom",
+  "complexity": "simple",
+  "scenario_type": "cascade_addon_subscribe",
+  "initial_state": {
+    "phone": "13800138000",
+    "plan_name": "Premium",
+    "plan_price": 59.99,
+    "addon_name": null,
+    "addon_price": null,
+    "addon_status": null
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants to subscribe to international roaming for $9.99/month.",
+    "agent_paraphrase": "Add international roaming to my line, please — $9.99 is fine.",
+    "user_persona": "Direct."
+  },
+  "agent_action": {
+    "name": "add_addon",
+    "params": {"addon_name": "international_roaming"}
+  },
+  "state_operations": [
+    {"op": "CASCADE", "group": "addon_config", "slots": ["addon_name", "addon_price", "addon_status"], "cause": "add_addon populates all three addon_config slots"},
+    {"op": "ADD", "slot": "addon_name", "value": "international_roaming"},
+    {"op": "ADD", "slot": "addon_price", "value": 9.99},
+    {"op": "ADD", "slot": "addon_status", "value": "active"}
+  ],
+  "expected_state_after": {
+    "phone": "13800138000",
+    "plan_name": "Premium",
+    "plan_price": 59.99,
+    "addon_name": "international_roaming",
+    "addon_price": 9.99,
+    "addon_status": "active"
+  },
+  "sop_applicability": {"rules": ["TS-01", "TM-02"]}
+}

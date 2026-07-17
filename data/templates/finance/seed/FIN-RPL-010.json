@@ -1,0 +1,42 @@
+{
+  "template_id": "FIN-RPL-010",
+  "domain": "finance",
+  "complexity": "complex",
+  "scenario_type": "no_action_abstention",
+  "initial_state": {
+    "card_last_four": "2210",
+    "card_holder_name": "Liang Wu",
+    "address": "221B Baker Street, London NW1 6XE",
+    "autopay": "enabled",
+    "autopay_bank": "HSBC UK",
+    "autopay_date": "5"
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer asks for a replacement card but the address on file is in the UK — agent must confirm shipping eligibility (correct action: confirm_intent + escalation, NOT issue_replacement_card directly).",
+    "agent_paraphrase": "My card was stolen — please send a replacement to my UK address.",
+    "user_persona": "Anxious, time-pressed."
+  },
+  "agent_action": {
+    "name": "escalate_to_human",
+    "params": {}
+  },
+  "state_operations": [
+    {"op": "KEEP", "slot": "card_last_four"},
+    {"op": "KEEP", "slot": "address"},
+    {"op": "KEEP", "slot": "autopay"},
+    {"op": "KEEP", "slot": "autopay_bank"},
+    {"op": "KEEP", "slot": "autopay_date"}
+  ],
+  "expected_state_after": {
+    "card_last_four": "2210",
+    "card_holder_name": "Liang Wu",
+    "address": "221B Baker Street, London NW1 6XE",
+    "autopay": "enabled",
+    "autopay_bank": "HSBC UK",
+    "autopay_date": "5"
+  },
+  "sop_applicability": {
+    "rules": ["FS-01", "FS-07"],
+    "violation_intent": true
+  }
+}

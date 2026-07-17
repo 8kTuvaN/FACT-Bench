@@ -1,0 +1,30 @@
+{
+  "template_id": "TEL-SUS-007",
+  "domain": "telecom",
+  "complexity": "medium",
+  "scenario_type": "multi_slot_mixed",
+  "initial_state": {
+    "phone": "13800138000",
+    "service_status": "active",
+    "contract_term": 12
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer is travelling abroad for 60 days and wants to suspend the line.",
+    "agent_paraphrase": "I'm going overseas for 2 months — please suspend my line until I'm back.",
+    "user_persona": "Polite, forward-looking."
+  },
+  "agent_action": {
+    "name": "suspend_service",
+    "params": {"phone": "13800138000"}
+  },
+  "state_operations": [
+    {"op": "MODIFY", "slot": "service_status", "old_value": "active", "new_value": "suspended"},
+    {"op": "KEEP", "slot": "contract_term"}
+  ],
+  "expected_state_after": {
+    "phone": "13800138000",
+    "service_status": "suspended",
+    "contract_term": 12
+  },
+  "sop_applicability": {"rules": ["TS-01"]}
+}

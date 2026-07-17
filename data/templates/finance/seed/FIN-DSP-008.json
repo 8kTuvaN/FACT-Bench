@@ -1,0 +1,38 @@
+{
+  "template_id": "FIN-DSP-008",
+  "domain": "finance",
+  "complexity": "medium",
+  "scenario_type": "target_shift",
+  "initial_state": {
+    "card_last_four": "9902",
+    "card_holder_name": "Priya Shankar",
+    "fraud_report_id": "FR-00481523",
+    "fraud_amount": 529.99,
+    "dispute_status": "open",
+    "email": "priya.shankar@example.com"
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer follows up on an open fraud dispute and updates her email.",
+    "agent_paraphrase": "Quick check — what's the status of my dispute FR-00481523? Also update my email.",
+    "user_persona": "Shifts topic mid-conversation (target_shift)."
+  },
+  "agent_action": {
+    "name": "update_contact_info",
+    "params": {"email": "priya.new@example.com"}
+  },
+  "state_operations": [
+    {"op": "MODIFY", "slot": "email", "old_value": "priya.shankar@example.com", "new_value": "priya.new@example.com"},
+    {"op": "KEEP", "slot": "fraud_report_id"},
+    {"op": "KEEP", "slot": "fraud_amount"},
+    {"op": "KEEP", "slot": "dispute_status"}
+  ],
+  "expected_state_after": {
+    "card_last_four": "9902",
+    "card_holder_name": "Priya Shankar",
+    "fraud_report_id": "FR-00481523",
+    "fraud_amount": 529.99,
+    "dispute_status": "open",
+    "email": "priya.new@example.com"
+  },
+  "sop_applicability": {"rules": ["FS-01", "FS-06"]}
+}

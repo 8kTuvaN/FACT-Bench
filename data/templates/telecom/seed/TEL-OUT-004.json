@@ -1,0 +1,28 @@
+{
+  "template_id": "TEL-OUT-004",
+  "domain": "telecom",
+  "complexity": "simple",
+  "scenario_type": "outage_report",
+  "initial_state": {
+    "phone": "13800138000",
+    "service_status": "active"
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer reports no mobile data in downtown Seattle since 14:00.",
+    "agent_paraphrase": "I've had no mobile data since 2pm — downtown Seattle, totally down.",
+    "user_persona": "Frustrated, factual."
+  },
+  "agent_action": {
+    "name": "report_outage",
+    "params": {"service_type": "mobile_data", "outage_location": "Seattle downtown", "affected_since": "2026-07-17T14:00"}
+  },
+  "state_operations": [
+    {"op": "KEEP", "slot": "phone"},
+    {"op": "KEEP", "slot": "service_status"}
+  ],
+  "expected_state_after": {
+    "phone": "13800138000",
+    "service_status": "active"
+  },
+  "sop_applicability": {"rules": ["TM-04"]}
+}

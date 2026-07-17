@@ -1,0 +1,34 @@
+{
+  "template_id": "TEL-PLN-002",
+  "domain": "telecom",
+  "complexity": "simple",
+  "scenario_type": "cascade_plan_change",
+  "initial_state": {
+    "phone": "13800138000",
+    "plan_name": "Basic",
+    "plan_price": 19.99,
+    "data_allowance": 5
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants to switch from Basic to Premium plan.",
+    "agent_paraphrase": "Please upgrade me from Basic to the Premium plan.",
+    "user_persona": "Decisive."
+  },
+  "agent_action": {
+    "name": "change_plan",
+    "params": {"plan_name": "Premium"}
+  },
+  "state_operations": [
+    {"op": "CASCADE", "group": "plan_spec", "slots": ["plan_name", "plan_price", "data_allowance"], "cause": "change_plan updates all three plan_spec slots coherently"},
+    {"op": "MODIFY", "slot": "plan_name", "old_value": "Basic", "new_value": "Premium"},
+    {"op": "MODIFY", "slot": "plan_price", "old_value": 19.99, "new_value": 59.99},
+    {"op": "MODIFY", "slot": "data_allowance", "old_value": 5, "new_value": 50}
+  ],
+  "expected_state_after": {
+    "phone": "13800138000",
+    "plan_name": "Premium",
+    "plan_price": 59.99,
+    "data_allowance": 50
+  },
+  "sop_applicability": {"rules": ["TS-01", "TM-01"]}
+}

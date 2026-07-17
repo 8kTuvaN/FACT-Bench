@@ -1,0 +1,30 @@
+{
+  "template_id": "TEL-PAY-005",
+  "domain": "telecom",
+  "complexity": "simple",
+  "scenario_type": "single_modify",
+  "initial_state": {
+    "phone": "13800138000",
+    "billing_amount": 72.48,
+    "payment_method": "credit_card"
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants to pay the current $72.48 telecom bill in full.",
+    "agent_paraphrase": "Pay the $72.48 bill on my saved credit card.",
+    "user_persona": "Routine."
+  },
+  "agent_action": {
+    "name": "pay_bill",
+    "params": {"billing_amount": 72.48, "payment_method": "credit_card"}
+  },
+  "state_operations": [
+    {"op": "MODIFY", "slot": "billing_amount", "old_value": 72.48, "new_value": 0.0},
+    {"op": "KEEP", "slot": "payment_method"}
+  ],
+  "expected_state_after": {
+    "phone": "13800138000",
+    "billing_amount": 0.0,
+    "payment_method": "credit_card"
+  },
+  "sop_applicability": {"rules": ["TS-01", "TS-05"]}
+}

@@ -1,0 +1,38 @@
+{
+  "template_id": "FIN-CLI-007",
+  "domain": "finance",
+  "complexity": "medium",
+  "scenario_type": "multi_slot_mixed",
+  "initial_state": {
+    "card_last_four": "5544",
+    "card_holder_name": "Hannah Müller",
+    "credit_limit": 8000,
+    "temp_limit": null,
+    "income": 95000,
+    "occupation": "data scientist"
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants a temporary credit limit raise to $12,000 for an upcoming purchase.",
+    "agent_paraphrase": "Could you bump my temp limit to $12,000 for the next 30 days?",
+    "user_persona": "Analytical, asks follow-ups."
+  },
+  "agent_action": {
+    "name": "set_temporary_limit",
+    "params": {"temp_limit": 12000}
+  },
+  "state_operations": [
+    {"op": "ADD", "slot": "temp_limit", "value": 12000},
+    {"op": "KEEP", "slot": "credit_limit"},
+    {"op": "KEEP", "slot": "income"},
+    {"op": "KEEP", "slot": "occupation"}
+  ],
+  "expected_state_after": {
+    "card_last_four": "5544",
+    "card_holder_name": "Hannah Müller",
+    "credit_limit": 8000,
+    "temp_limit": 12000,
+    "income": 95000,
+    "occupation": "data scientist"
+  },
+  "sop_applicability": {"rules": ["FS-01", "FM-05"]}
+}

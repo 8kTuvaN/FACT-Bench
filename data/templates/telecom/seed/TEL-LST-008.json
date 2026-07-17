@@ -1,0 +1,33 @@
+{
+  "template_id": "TEL-LST-008",
+  "domain": "telecom",
+  "complexity": "medium",
+  "scenario_type": "multi_slot_mixed",
+  "initial_state": {
+    "phone": "13800138000",
+    "imei": "356938035643809",
+    "device_model": "Galaxy S25",
+    "service_status": "active"
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer reports their Galaxy S25 as lost; line must be locked.",
+    "agent_paraphrase": "My Galaxy S25 was just stolen — please lock the line.",
+    "user_persona": "Alarmed."
+  },
+  "agent_action": {
+    "name": "report_lost_device",
+    "params": {"imei": "356938035643809"}
+  },
+  "state_operations": [
+    {"op": "MODIFY", "slot": "service_status", "old_value": "active", "new_value": "suspended"},
+    {"op": "KEEP", "slot": "imei"},
+    {"op": "KEEP", "slot": "device_model"}
+  ],
+  "expected_state_after": {
+    "phone": "13800138000",
+    "imei": "356938035643809",
+    "device_model": "Galaxy S25",
+    "service_status": "suspended"
+  },
+  "sop_applicability": {"rules": ["TS-01", "TM-04"]}
+}

@@ -1,0 +1,36 @@
+{
+  "template_id": "FIN-AUT-006",
+  "domain": "finance",
+  "complexity": "medium",
+  "scenario_type": "cascade_autopay_enable",
+  "initial_state": {
+    "card_last_four": "3308",
+    "card_holder_name": "Wei Chen",
+    "autopay": "disabled",
+    "autopay_bank": null,
+    "autopay_date": null
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants to enable autopay from First National Bank on the 15th of each month.",
+    "agent_paraphrase": "Please set up autopay from First National Bank, run it on the 15th.",
+    "user_persona": "Methodical, asks for confirmation."
+  },
+  "agent_action": {
+    "name": "enable_autopay",
+    "params": {"autopay_bank": "First National Bank", "autopay_date": "15"}
+  },
+  "state_operations": [
+    {"op": "CASCADE", "group": "autopay_config", "slots": ["autopay", "autopay_bank", "autopay_date"], "cause": "enable_autopay must populate all three slots atomically"},
+    {"op": "MODIFY", "slot": "autopay", "old_value": "disabled", "new_value": "enabled"},
+    {"op": "ADD", "slot": "autopay_bank", "value": "First National Bank"},
+    {"op": "ADD", "slot": "autopay_date", "value": "15"}
+  ],
+  "expected_state_after": {
+    "card_last_four": "3308",
+    "card_holder_name": "Wei Chen",
+    "autopay": "enabled",
+    "autopay_bank": "First National Bank",
+    "autopay_date": "15"
+  },
+  "sop_applicability": {"rules": ["FS-01", "FM-01"]}
+}

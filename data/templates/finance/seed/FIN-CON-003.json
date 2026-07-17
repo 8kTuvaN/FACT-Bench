@@ -1,0 +1,33 @@
+{
+  "template_id": "FIN-CON-003",
+  "domain": "finance",
+  "complexity": "simple",
+  "scenario_type": "single_add",
+  "initial_state": {
+    "card_last_four": "9902",
+    "card_holder_name": "Priya Shankar",
+    "phone": "13800138000",
+    "email": null,
+    "address": "742 Evergreen Terrace, Springfield, IL 62704"
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants to add an email address on file.",
+    "agent_paraphrase": "I don't have an email on my account — could you add priya.shankar@example.com?",
+    "user_persona": "Polite, somewhat hesitant."
+  },
+  "agent_action": {
+    "name": "update_contact_info",
+    "params": {"email": "priya.shankar@example.com"}
+  },
+  "state_operations": [
+    {"op": "ADD", "slot": "email", "value": "priya.shankar@example.com"}
+  ],
+  "expected_state_after": {
+    "card_last_four": "9902",
+    "card_holder_name": "Priya Shankar",
+    "phone": "13800138000",
+    "email": "priya.shankar@example.com",
+    "address": "742 Evergreen Terrace, Springfield, IL 62704"
+  },
+  "sop_applicability": {"rules": ["FS-01"]}
+}

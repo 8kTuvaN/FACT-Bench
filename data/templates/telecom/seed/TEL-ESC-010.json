@@ -1,0 +1,45 @@
+{
+  "template_id": "TEL-ESC-010",
+  "domain": "telecom",
+  "complexity": "complex",
+  "scenario_type": "sop_violation",
+  "initial_state": {
+    "phone": "13800138000",
+    "plan_name": "Basic",
+    "plan_price": 19.99,
+    "data_allowance": 5,
+    "addon_name": "international_roaming",
+    "addon_status": "active",
+    "addon_price": 9.99
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants to remove international roaming — BUT agent must first verify whether they are mid-trip (potential SOP corner case requiring supervisor review).",
+    "agent_paraphrase": "Cancel international roaming right away — I don't need it.",
+    "user_persona": "Impatient."
+  },
+  "agent_action": {
+    "name": "escalate_to_human",
+    "params": {}
+  },
+  "state_operations": [
+    {"op": "KEEP", "slot": "plan_name"},
+    {"op": "KEEP", "slot": "plan_price"},
+    {"op": "KEEP", "slot": "data_allowance"},
+    {"op": "KEEP", "slot": "addon_name"},
+    {"op": "KEEP", "slot": "addon_status"},
+    {"op": "KEEP", "slot": "addon_price"}
+  ],
+  "expected_state_after": {
+    "phone": "13800138000",
+    "plan_name": "Basic",
+    "plan_price": 19.99,
+    "data_allowance": 5,
+    "addon_name": "international_roaming",
+    "addon_status": "active",
+    "addon_price": 9.99
+  },
+  "sop_applicability": {
+    "rules": ["TS-01", "TS-02"],
+    "violation_intent": true
+  }
+}

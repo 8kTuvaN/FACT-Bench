@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fact-bench.org/schema/template_schema.json",
+  "title": "FACT-Bench Template",
+  "description": "JSON Schema for a FACT-Bench dialogue template. A template specifies (1) an initial state, (2) user_intent_seed, (3) agent_action with required_params, (4) state_operations (a list of ADD/MODIFY/DELETE/KEEP/CASCADE operations), (5) expected_state_after, (6) sop_applicability. The validator (src/templates/validator.py) enforces slot/action resolution and CASCADE formal criteria.",
+  "type": "object",
+  "required": [
+    "template_id",
+    "domain",
+    "complexity",
+    "scenario_type",
+    "initial_state",
+    "user_intent_seed",
+    "agent_action",
+    "state_operations",
+    "expected_state_after",
+    "sop_applicability"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "template_id": {
+      "type": "string",
+      "pattern": "^(FIN|TEL)-[A-Z]{3,5}-[0-9]{3}$",
+      "description": "Unique template ID. FIN/TEL prefix for domain; 3-5 letter scenario code; 3-digit serial."
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["finance", "telecom"],
+      "description": "Domain this template belongs to."
+    },
+    "complexity": {
+      "type": "string",
+      "enum": ["simple", "medium", "complex"],
+      "description": "Simple=1 user turn, single op. Medium=2-4 turns, may include CASCADE. Complex=5+ turns, multi-step with SOP."
+    },
+    "scenario_type": {
+      "type": "string",
+      "enum": [
+        "pure_query",
+        "single_add",
+        "single_modify",
+        "single_delete",
+        "multi_slot_mixed",
+        "cascade_plan_change",
+        "cascade_autopay_enable",
+        "cascade_addon_subscribe",
+        "target_shift",
+        "sop_violation",
+        "no_action_abstention",
+        "device_activation",
+        "outage_report",
+        "dispute_bill",
+        "loan_application",
+        "fraud_report"
+      ],
+      "description": "Scenario category. Used by distribution_check.py and seed audit."
+    },
+    "initial_state": {
+      "type": "object",
+      "description": "Initial dialogue state as a flat {slot_name: value} dict. Slots with null values are unset; the template only declares slots relevant to this dialogue.",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean", "null"]
+      }
+    },
+    "user_intent_seed": {
+      "type": "object",
+      "description": "Seed for natural-language generation. agent_paraphrase is human-written ground truth used to anchor generation.",
+      "required": ["user_goal"],
+      "properties": {
+        "user_goal": {"type": "string", "minLength": 5},
+        "agent_paraphrase": {"type": "string", "minLength": 5},
+        "user_persona": {"type": "string"}
+      }
+    },
+    "agent_action": {
+      "type": "object",
+      "description": "The single primary agent action the dialogue must end with.",
+      "required": ["name", "params"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Action name. Must resolve against the domain's actions.json (excluding dialogue-flow actions inform_customer/confirm_intent unless explicitly used)."
+        },
+        "params": {
+          "type": "object",
+          "description": "Concrete parameter values for the action. Keys must be a subset of (action.required_params ∪ action.optional_params).",
+          "additionalProperties": true
+        }
+      }
+    },
+    "state_operations": {
+      "type": "array",
+      "description": "Ordered list of slot operations produced by this dialogue. Each entry is one of ADD/MODIFY/DELETE/KEEP/CASCADE.",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["op", "slot"],
+            "properties": {
+              "op": {"const": "ADD"},
+              "slot": {"type": "string"},
+              "value": {}
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["op", "slot"],
+            "properties": {
+              "op": {"const": "MODIFY"},
+              "slot": {"type": "string"},
+              "old_value": {},
+              "new_value": {}
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["op", "slot"],
+            "properties": {
+              "op": {"const": "DELETE"},
+              "slot": {"type": "string"}
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["op", "slot"],
+            "properties": {
+              "op": {"const": "KEEP"},
+              "slot": {"type": "string"}
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["op", "group", "slots"],
+            "properties": {
+              "op": {"const": "CASCADE"},
+              "group": {"type": "string"},
+              "slots": {
+                "type": "array",
+                "minItems": 3,
+                "items": {"type": "string"}
+              },
+              "cause": {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "expected_state_after": {
+      "type": "object",
+      "description": "Full dialogue state after the agent action executes. Must be consistent with initial_state + state_operations.",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean", "null", "array"]
+      }
+    },
+    "sop_applicability": {
+      "type": "object",
+      "description": "Which SOP rules this template exercises. Validated against the domain SOP files.",
+      "required": ["rules"],
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(FS|FM|TS|TM)-[0-9]{2}$"
+          }
+        },
+        "violation_intent": {
+          "type": "boolean",
+          "description": "If true, this template is a deliberate SOP-violation case used for T5 negative training."
+        }
+      }
+    }
+  }
+}

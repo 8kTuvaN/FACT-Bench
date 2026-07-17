@@ -1,0 +1,33 @@
+{
+  "template_id": "TEL-USG-001",
+  "domain": "telecom",
+  "complexity": "simple",
+  "scenario_type": "pure_query",
+  "initial_state": {
+    "phone": "13800138000",
+    "plan_name": "Premium",
+    "plan_price": 59.99,
+    "data_allowance": 50
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants to check their current data usage against the plan allowance.",
+    "agent_paraphrase": "How much data have I used this cycle on my Premium plan?",
+    "user_persona": "Casual, brief."
+  },
+  "agent_action": {
+    "name": "check_data_usage",
+    "params": {"phone": "13800138000"}
+  },
+  "state_operations": [
+    {"op": "KEEP", "slot": "phone"},
+    {"op": "KEEP", "slot": "plan_name"},
+    {"op": "KEEP", "slot": "data_allowance"}
+  ],
+  "expected_state_after": {
+    "phone": "13800138000",
+    "plan_name": "Premium",
+    "plan_price": 59.99,
+    "data_allowance": 50
+  },
+  "sop_applicability": {"rules": ["TS-01"]}
+}

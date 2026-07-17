@@ -1,0 +1,39 @@
+{
+  "template_id": "FIN-LOA-005",
+  "domain": "finance",
+  "complexity": "simple",
+  "scenario_type": "loan_application",
+  "initial_state": {
+    "card_last_four": "1122",
+    "card_holder_name": "Aiyana Lightfoot",
+    "income": 82000,
+    "occupation": "software engineer",
+    "loan_amount": null,
+    "loan_term": null,
+    "loan_purpose": null
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants to apply for a $25,000 loan for home renovation over 36 months.",
+    "agent_paraphrase": "I'd like to apply for a $25k personal loan, 36 months, for home renovation.",
+    "user_persona": "Practical, factual."
+  },
+  "agent_action": {
+    "name": "apply_for_loan",
+    "params": {"loan_amount": 25000.0, "loan_term": 36, "loan_purpose": "home renovation", "income": 82000}
+  },
+  "state_operations": [
+    {"op": "ADD", "slot": "loan_amount", "value": 25000.0},
+    {"op": "ADD", "slot": "loan_term", "value": 36},
+    {"op": "ADD", "slot": "loan_purpose", "value": "home renovation"}
+  ],
+  "expected_state_after": {
+    "card_last_four": "1122",
+    "card_holder_name": "Aiyana Lightfoot",
+    "income": 82000,
+    "occupation": "software engineer",
+    "loan_amount": 25000.0,
+    "loan_term": 36,
+    "loan_purpose": "home renovation"
+  },
+  "sop_applicability": {"rules": ["FS-01", "FS-05", "FM-04"]}
+}

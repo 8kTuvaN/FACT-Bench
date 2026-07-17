@@ -1,0 +1,34 @@
+{
+  "template_id": "FIN-PAY-002",
+  "domain": "finance",
+  "complexity": "simple",
+  "scenario_type": "single_modify",
+  "initial_state": {
+    "card_last_four": "4821",
+    "card_holder_name": "Jordan A. Rivera",
+    "bill_amount": 1284.57,
+    "minimum_payment": 35.0,
+    "autopay": "disabled"
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants to pay the full current bill.",
+    "agent_paraphrase": "I'd like to pay the full $1,284.57 balance today.",
+    "user_persona": "Decisive, time-pressed."
+  },
+  "agent_action": {
+    "name": "make_payment",
+    "params": {"card_last_four": "4821", "bill_amount": 1284.57}
+  },
+  "state_operations": [
+    {"op": "MODIFY", "slot": "bill_amount", "old_value": 1284.57, "new_value": 0.0},
+    {"op": "MODIFY", "slot": "minimum_payment", "old_value": 35.0, "new_value": 0.0}
+  ],
+  "expected_state_after": {
+    "card_last_four": "4821",
+    "card_holder_name": "Jordan A. Rivera",
+    "bill_amount": 0.0,
+    "minimum_payment": 0.0,
+    "autopay": "disabled"
+  },
+  "sop_applicability": {"rules": ["FS-01", "FS-03"]}
+}

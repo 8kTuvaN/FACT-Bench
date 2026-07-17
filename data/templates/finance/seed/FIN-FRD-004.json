@@ -1,0 +1,36 @@
+{
+  "template_id": "FIN-FRD-004",
+  "domain": "finance",
+  "complexity": "simple",
+  "scenario_type": "fraud_report",
+  "initial_state": {
+    "card_last_four": "7753",
+    "card_holder_name": "Marco Delgado",
+    "fraud_report_id": null,
+    "fraud_amount": null,
+    "dispute_status": null
+  },
+  "user_intent_seed": {
+    "user_goal": "Customer wants to report an unrecognized charge of $529.99 as fraud.",
+    "agent_paraphrase": "I see a $529.99 charge I didn't make — please file a fraud report.",
+    "user_persona": "Concerned, urgent."
+  },
+  "agent_action": {
+    "name": "report_fraud",
+    "params": {"card_last_four": "7753", "fraud_amount": 529.99}
+  },
+  "state_operations": [
+    {"op": "CASCADE", "group": "fraud_info", "slots": ["fraud_report_id", "fraud_amount", "dispute_status"], "cause": "report_fraud opens a new fraud case"},
+    {"op": "ADD", "slot": "fraud_report_id", "value": "FR-00481523"},
+    {"op": "ADD", "slot": "fraud_amount", "value": 529.99},
+    {"op": "ADD", "slot": "dispute_status", "value": "open"}
+  ],
+  "expected_state_after": {
+    "card_last_four": "7753",
+    "card_holder_name": "Marco Delgado",
+    "fraud_report_id": "FR-00481523",
+    "fraud_amount": 529.99,
+    "dispute_status": "open"
+  },
+  "sop_applicability": {"rules": ["FS-01", "FS-04", "FM-02"]}
+}

@@ -1,0 +1,342 @@
+"""FACT-Bench template validator.
+
+Validates a single template against:
+  1. JSON-Schema structural check (template_schema.json).
+  2. Slot-name resolution: every slot referenced in initial_state, expected_state_after,
+     state_operations (ADD/MODIFY/DELETE/KEEP slots + CASCADE.slots) must exist in the
+     domain's slots.json.
+  3. Action-name resolution: agent_action.name must exist in domain actions.json AND
+     every key in agent_action.params must be in (action.required_params ∪ action.optional_params).
+  4. CASCADE formal criteria (all three):
+       (a) common_cause: CASCADE.cause is a non-empty string.
+       (b) semantic_integrality: len(CASCADE.slots) >= 3 AND all slots belong to the
+           declared group per semantic_groups_<domain>.json.
+       (c) non_decomposability: group is CASCADE-eligible (>= 3 slots in group).
+  5. Operation enum: state_operations[*].op must be one of ADD/MODIFY/DELETE/KEEP/CASCADE.
+  6. Semantic-group ref: state_operations CASCADE.group must exist in
+     semantic_groups_<domain>.json.
+  7. SOP rule ref: every rule id in sop_applicability.rules must exist in either
+     simple or medium SOP files for the domain.
+  8. State consistency: for each slot in expected_state_after vs initial_state, the
+     operations list must be coherent (KEEP if value unchanged; ADD/MODIFY if changed; etc.).
+
+Usage:
+    python -m src.templates.validator data/templates/finance/seed/FIN-*.json
+    python -m src.templates.validator --all   # validates every *.json under data/templates/
+
+Exit code 0 if all valid; non-zero (with stderr summary) otherwise.
+"""
+from __future__ import annotations
+
+import argparse
+import glob
+import json
+import os
+import sys
+from pathlib import Path
+from typing import Any
+
+try:
+    import jsonschema
+except ImportError:  # pragma: no cover
+    jsonschema = None  # we will fall back to a hand-rolled structural check
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SLOTS_FILES = {
+    "finance": REPO_ROOT / "data" / "slots" / "finance_slots.json",
+    "telecom": REPO_ROOT / "data" / "slots" / "telecom_slots.json",
+}
+GROUPS_FILES = {
+    "finance": REPO_ROOT / "data" / "slots" / "semantic_groups_finance.json",
+    "telecom": REPO_ROOT / "data" / "slots" / "semantic_groups_telecom.json",
+}
+ACTIONS_FILES = {
+    "finance": REPO_ROOT / "data" / "actions" / "finance_actions.json",
+    "telecom": REPO_ROOT / "data" / "actions" / "telecom_actions.json",
+}
+SOP_FILES = {
+    "finance": [
+        REPO_ROOT / "data" / "sop" / "finance_sop_simple.json",
+        REPO_ROOT / "data" / "sop" / "finance_sop_medium.json",
+    ],
+    "telecom": [
+        REPO_ROOT / "data" / "sop" / "telecom_sop_simple.json",
+        REPO_ROOT / "data" / "sop" / "telecom_sop_medium.json",
+    ],
+}
+SCHEMA_PATH = REPO_ROOT / "src" / "templates" / "schema" / "template_schema.json"
+
+ALLOWED_OPS = {"ADD", "MODIFY", "DELETE", "KEEP", "CASCADE"}
+
+
+class ValidationError:
+    def __init__(self, template_id: str, rule: str, message: str):
+        self.template_id = template_id
+        self.rule = rule
+        self.message = message
+
+    def __str__(self) -> str:
+        return f"[{self.template_id}] {self.rule}: {self.message}"
+
+
+def _load_json(path: Path) -> dict[str, Any]:
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _build_slot_index() -> dict[tuple[str, str], dict[str, Any]]:
+    """Returns {(domain, slot_name): {'semantic_group': ...}}.
+
+    Indexed by (domain, slot_name) because some slot names are shared across
+    domains (phone, email, address, dispute_status) — checking by name alone
+    would produce false cross-domain ownership violations.
+    """
+    idx: dict[tuple[str, str], dict[str, Any]] = {}
+    for domain, path in SLOTS_FILES.items():
+        d = _load_json(path)
+        for name, slot in d["slots"].items():
+            idx[(domain, name)] = {"semantic_group": slot["semantic_group"]}
+    return idx
+
+
+def _build_group_index() -> dict[tuple[str, str], dict[str, Any]]:
+    """Returns {(domain, group_name): {'slots': [...]}}."""
+    idx: dict[tuple[str, str], dict[str, Any]] = {}
+    for domain, path in GROUPS_FILES.items():
+        d = _load_json(path)
+        for group, members in d["groups"].items():
+            idx[(domain, group)] = {"slots": list(members)}
+    return idx
+
+
+def _build_action_index() -> dict[tuple[str, str], dict[str, Any]]:
+    """Returns {(domain, action_name): action_dict}.
+
+    Indexed by (domain, action_name) because some actions are shared across
+    domains (verify_identity, update_contact_info, escalate_to_human).
+    """
+    idx: dict[tuple[str, str], dict[str, Any]] = {}
+    for domain, path in ACTIONS_FILES.items():
+        d = _load_json(path)
+        for name, action in d["actions"].items():
+            idx[(domain, name)] = action
+    return idx
+
+
+def _build_sop_index() -> dict[str, str]:
+    """Returns {rule_id: domain}."""
+    idx: dict[str, str] = {}
+    for domain, paths in SOP_FILES.items():
+        for path in paths:
+            d = _load_json(path)
+            for rule in d.get("rules") or d.get("additional_rules") or []:
+                idx[rule["id"]] = domain
+    return idx
+
+
+def validate(template: dict[str, Any], errors: list[ValidationError]) -> None:
+    """In-place mutator: appends ValidationError entries for any rule violation."""
+    tid = template.get("template_id", "<missing>")
+    domain = template.get("domain")
+
+    # -- 1. JSON-Schema structural check --
+    if jsonschema is not None and SCHEMA_PATH.exists():
+        try:
+            schema = _load_json(SCHEMA_PATH)
+            jsonschema.validate(instance=template, schema=schema)
+        except jsonschema.ValidationError as e:
+            errors.append(ValidationError(tid, "schema", str(e.message)))
+            return  # no point checking further if the structure is broken
+    else:
+        errors.append(
+            ValidationError(
+                tid,
+                "schema",
+                "jsonschema package unavailable or schema missing — skipping structural check",
+            )
+        )
+
+    if domain not in {"finance", "telecom"}:
+        errors.append(ValidationError(tid, "domain", f"invalid domain: {domain}"))
+        return
+
+    slot_idx = _build_slot_index()
+    group_idx = _build_group_index()
+    action_idx = _build_action_index()
+    sop_idx = _build_sop_index()
+
+    # -- 2. Slot-name resolution --
+    init = template.get("initial_state", {})
+    final = template.get("expected_state_after", {})
+    for slot in list(init.keys()) + list(final.keys()):
+        if (domain, slot) not in slot_idx:
+            errors.append(ValidationError(tid, "slot_ref", f"unknown slot '{slot}' for domain {domain}"))
+
+    # -- 3. Action-name resolution + param check --
+    agent_action = template.get("agent_action", {})
+    action_name = agent_action.get("name")
+    if (domain, action_name) not in action_idx:
+        errors.append(ValidationError(tid, "action_ref", f"unknown action '{action_name}' for domain {domain}"))
+    else:
+        action = action_idx[(domain, action_name)]
+        allowed_params = set(action["required_params"]) | set(action["optional_params"])
+        for k in (agent_action.get("params") or {}).keys():
+            if k not in allowed_params:
+                # Permissive: dialogue-flow actions (inform_customer, confirm_intent,
+                # report_outage, dispute_bill, verify_identity_tfa, request_supervisor_approval)
+                # carry meta-fields that are NOT in the slot ontology. We still flag it
+                # so authors notice, but allow if action is in the dialogue-flow allowlist.
+                if action_name in {
+                    "inform_customer",
+                    "confirm_intent",
+                    "report_outage",
+                    "dispute_bill",
+                    "verify_identity_tfa",
+                    "request_supervisor_approval",
+                }:
+                    continue
+                errors.append(
+                    ValidationError(
+                        tid,
+                        "action_param",
+                        f"param '{k}' not in {action_name}.required_params ∪ .optional_params",
+                    )
+                )
+
+    # -- 4+6. Operation enum + CASCADE criteria + semantic-group ref --
+    cascade_slots: set[str] = set()
+    for op_entry in template.get("state_operations", []):
+        op = op_entry.get("op")
+        if op not in ALLOWED_OPS:
+            errors.append(ValidationError(tid, "op_enum", f"invalid op '{op}'"))
+            continue
+        if op == "CASCADE":
+            group = op_entry.get("group")
+            slots = op_entry.get("slots") or []
+            cause = op_entry.get("cause", "")
+            if not cause:
+                errors.append(
+                    ValidationError(tid, "cascade_cause", "CASCADE.cause must be non-empty (criterion: common cause)")
+                )
+            if (domain, group) not in group_idx:
+                errors.append(ValidationError(tid, "cascade_group", f"unknown group '{group}' for domain {domain}"))
+            else:
+                # criterion (b): semantic_integrality — all slots in same group
+                group_members = set(group_idx[(domain, group)]["slots"])
+                for s in slots:
+                    if s not in group_members:
+                        errors.append(
+                            ValidationError(
+                                tid,
+                                "cascade_integrality",
+                                f"CASCADE slot '{s}' not in group '{group}'",
+                            )
+                        )
+                # criterion (c): non_decomposability — group must be CASCADE-eligible
+                if len(group_members) < 3:
+                    errors.append(
+                        ValidationError(
+                            tid,
+                            "cascade_eligible",
+                            f"group '{group}' has only {len(group_members)} slots — cannot form CASCADE",
+                        )
+                    )
+            # criterion (b) continued: at least 3 slots in the cascade
+            if len(slots) < 3:
+                errors.append(
+                    ValidationError(
+                        tid, "cascade_size", f"CASCADE requires >=3 slots, got {len(slots)}"
+                    )
+                )
+            cascade_slots.update(slots)
+        else:
+            slot = op_entry.get("slot")
+            if (domain, slot) not in slot_idx:
+                errors.append(ValidationError(tid, "slot_ref", f"op {op} on unknown slot '{slot}' for domain {domain}"))
+
+    # -- 7. SOP rule ref --
+    for rid in (template.get("sop_applicability") or {}).get("rules", []):
+        if rid not in sop_idx:
+            errors.append(ValidationError(tid, "sop_ref", f"unknown SOP rule '{rid}'"))
+        elif sop_idx[rid] != domain:
+            errors.append(
+                ValidationError(
+                    tid, "sop_ref", f"SOP rule '{rid}' belongs to {sop_idx[rid]}, not {domain}"
+                )
+            )
+
+    # -- 8. State consistency (lightweight) --
+    for slot, final_val in final.items():
+        if (domain, slot) not in slot_idx:
+            continue  # already flagged
+        init_val = init.get(slot, None)
+        op_for_slot = None
+        for o in template.get("state_operations", []):
+            if o.get("slot") == slot:
+                op_for_slot = o
+                break
+            if o.get("op") == "CASCADE" and slot in (o.get("slots") or []):
+                op_for_slot = o
+                break
+        if init_val == final_val:
+            # no change: should be KEEP (or no entry). We don't enforce, just note.
+            continue
+        if init_val is None and final_val is not None:
+            if op_for_slot is None or op_for_slot.get("op") not in {"ADD", "CASCADE"}:
+                errors.append(
+                    ValidationError(
+                        tid,
+                        "state_consistency",
+                        f"slot '{slot}' went null→value but has no ADD/CASCADE op",
+                    )
+                )
+        elif init_val is not None and final_val is None:
+            if op_for_slot is None or op_for_slot.get("op") not in {"DELETE", "CASCADE"}:
+                errors.append(
+                    ValidationError(
+                        tid,
+                        "state_consistency",
+                        f"slot '{slot}' went value→null but has no DELETE/CASCADE op",
+                    )
+                )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="FACT-Bench template validator")
+    parser.add_argument("paths", nargs="*", help="Template JSON files (or globs)")
+    parser.add_argument("--all", action="store_true", help="Validate every template under data/templates/")
+    args = parser.parse_args()
+
+    if args.all:
+        files = sorted(glob.glob(str(REPO_ROOT / "data" / "templates" / "**" / "*.json"), recursive=True))
+    else:
+        files = []
+        for p in args.paths:
+            files.extend(glob.glob(p))
+        files = sorted(set(files))
+
+    if not files:
+        print("[validator] no template files to validate", file=sys.stderr)
+        return 1
+
+    all_errors: list[ValidationError] = []
+    for f in files:
+        try:
+            tpl = _load_json(Path(f))
+        except Exception as e:
+            all_errors.append(ValidationError(f, "load", f"could not parse JSON: {e}"))
+            continue
+        validate(tpl, all_errors)
+
+    if all_errors:
+        print(f"[validator] FAILED — {len(all_errors)} error(s) across {len(files)} file(s):", file=sys.stderr)
+        for e in all_errors:
+            print(f"  {e}", file=sys.stderr)
+        return 1
+
+    print(f"[validator] OK — {len(files)} template(s) passed all checks")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -3,13 +3,25 @@
   "version": "1.2.0",
   "description": "Finance domain action schema library for FACT-Bench. 19 actions (extended from 15 on 2026-07-16 per audit). Includes 15 state-modifying actions and 4 dialogue-flow / verification extensions (inform_customer, confirm_intent, verify_identity_tfa, request_supervisor_approval). Each action declares required_params/optional_params (referencing slots in finance_slots.json OR meta-fields documented in data/meta_fields/meta_fields.json for dialogue-flow actions), preconditions, side_effects (slot writes), an automatable flag, and a category for analysis grouping (added 2026-07-16 per audit P0). Serves C3 (action grounding / taxonomy) and C4 (SOTA action-planning evaluation).",
   "action_count": 19,
-  "categories": ["query", "modify", "security", "escalation", "informational", "clarification"],
+  "categories": [
+    "query",
+    "modify",
+    "security",
+    "escalation",
+    "informational",
+    "clarification"
+  ],
   "actions": {
     "verify_identity": {
       "name": "verify_identity",
       "description": "Authenticate the customer before any account-modifying action.",
-      "required_params": ["card_last_four", "card_holder_name"],
-      "optional_params": ["phone"],
+      "required_params": [
+        "card_last_four",
+        "card_holder_name"
+      ],
+      "optional_params": [
+        "phone"
+      ],
       "preconditions": [],
       "side_effects": [],
       "automatable": true,
@@ -18,9 +30,13 @@
     "check_balance": {
       "name": "check_balance",
       "description": "Retrieve the current statement balance and minimum payment.",
-      "required_params": ["card_last_four"],
+      "required_params": [
+        "card_last_four"
+      ],
       "optional_params": [],
-      "preconditions": ["verify_identity"],
+      "preconditions": [
+        "verify_identity"
+      ],
       "side_effects": [],
       "automatable": true,
       "category": "query"
@@ -28,10 +44,20 @@
     "make_payment": {
       "name": "make_payment",
       "description": "Post a payment against the current bill.",
-      "required_params": ["card_last_four", "bill_amount"],
-      "optional_params": ["autopay_bank"],
-      "preconditions": ["verify_identity"],
-      "side_effects": ["bill_amount", "minimum_payment"],
+      "required_params": [
+        "card_last_four",
+        "bill_amount"
+      ],
+      "optional_params": [
+        "autopay_bank"
+      ],
+      "preconditions": [
+        "verify_identity"
+      ],
+      "side_effects": [
+        "bill_amount",
+        "minimum_payment"
+      ],
       "automatable": true,
       "category": "modify"
     },
@@ -39,19 +65,38 @@
       "name": "update_contact_info",
       "description": "Update one or more customer contact fields.",
       "required_params": [],
-      "optional_params": ["phone", "email", "address"],
-      "preconditions": ["verify_identity"],
-      "side_effects": ["phone", "email", "address"],
+      "optional_params": [
+        "phone",
+        "email",
+        "address"
+      ],
+      "preconditions": [
+        "verify_identity"
+      ],
+      "side_effects": [
+        "phone",
+        "email",
+        "address"
+      ],
       "automatable": true,
       "category": "modify"
     },
     "enable_autopay": {
       "name": "enable_autopay",
       "description": "Enable automatic payment, setting funding bank and run date.",
-      "required_params": ["autopay_bank", "autopay_date"],
+      "required_params": [
+        "autopay_bank",
+        "autopay_date"
+      ],
       "optional_params": [],
-      "preconditions": ["verify_identity"],
-      "side_effects": ["autopay", "autopay_bank", "autopay_date"],
+      "preconditions": [
+        "verify_identity"
+      ],
+      "side_effects": [
+        "autopay",
+        "autopay_bank",
+        "autopay_date"
+      ],
       "automatable": true,
       "category": "modify"
     },
@@ -60,57 +105,101 @@
       "description": "Disable automatic payment and clear its configuration.",
       "required_params": [],
       "optional_params": [],
-      "preconditions": ["verify_identity", "enable_autopay"],
-      "side_effects": ["autopay", "autopay_bank", "autopay_date"],
+      "preconditions": [
+        "verify_identity",
+        "enable_autopay"
+      ],
+      "side_effects": [
+        "autopay",
+        "autopay_bank",
+        "autopay_date"
+      ],
       "automatable": true,
       "category": "modify"
     },
     "request_credit_limit_increase": {
       "name": "request_credit_limit_increase",
       "description": "Submit a request to raise the permanent credit limit.",
-      "required_params": ["credit_limit", "income"],
-      "optional_params": ["occupation"],
-      "preconditions": ["verify_identity"],
-      "side_effects": ["credit_limit"],
+      "required_params": [
+        "credit_limit",
+        "income"
+      ],
+      "optional_params": [
+        "occupation"
+      ],
+      "preconditions": [
+        "verify_identity"
+      ],
+      "side_effects": [
+        "credit_limit"
+      ],
       "automatable": false,
       "category": "escalation"
     },
     "set_temporary_limit": {
       "name": "set_temporary_limit",
       "description": "Grant a temporary credit limit increase.",
-      "required_params": ["temp_limit"],
+      "required_params": [
+        "temp_limit"
+      ],
       "optional_params": [],
-      "preconditions": ["verify_identity"],
-      "side_effects": ["temp_limit"],
+      "preconditions": [
+        "verify_identity"
+      ],
+      "side_effects": [
+        "temp_limit"
+      ],
       "automatable": true,
       "category": "modify"
     },
     "report_fraud": {
       "name": "report_fraud",
       "description": "File a fraud report for a disputed transaction.",
-      "required_params": ["card_last_four", "fraud_amount"],
+      "required_params": [
+        "card_last_four",
+        "fraud_amount"
+      ],
       "optional_params": [],
-      "preconditions": ["verify_identity"],
-      "side_effects": ["fraud_report_id", "fraud_amount", "dispute_status"],
+      "preconditions": [
+        "verify_identity"
+      ],
+      "side_effects": [
+        "fraud_report_id",
+        "fraud_amount",
+        "dispute_status"
+      ],
       "automatable": false,
       "category": "escalation"
     },
     "dispute_transaction": {
       "name": "dispute_transaction",
       "description": "Open a formal dispute tied to an existing fraud report.",
-      "required_params": ["fraud_report_id"],
-      "optional_params": ["fraud_amount"],
-      "preconditions": ["report_fraud"],
-      "side_effects": ["dispute_status"],
+      "required_params": [
+        "fraud_report_id"
+      ],
+      "optional_params": [
+        "fraud_amount"
+      ],
+      "preconditions": [
+        "report_fraud"
+      ],
+      "side_effects": [
+        "dispute_status"
+      ],
       "automatable": false,
       "category": "escalation"
     },
     "check_dispute_status": {
       "name": "check_dispute_status",
       "description": "Look up the resolution status of an open dispute.",
-      "required_params": ["fraud_report_id"],
+      "required_params": [
+        "fraud_report_id"
+      ],
       "optional_params": [],
-      "preconditions": ["verify_identity", "report_fraud"],
+      "preconditions": [
+        "verify_identity",
+        "report_fraud"
+      ],
       "side_effects": [],
       "automatable": true,
       "category": "query"
@@ -118,20 +207,40 @@
     "issue_replacement_card": {
       "name": "issue_replacement_card",
       "description": "Issue a replacement card (e.g., after fraud or loss).",
-      "required_params": ["card_last_four", "address"],
+      "required_params": [
+        "card_last_four",
+        "address"
+      ],
       "optional_params": [],
-      "preconditions": ["verify_identity"],
-      "side_effects": ["card_last_four"],
+      "preconditions": [
+        "verify_identity"
+      ],
+      "side_effects": [
+        "card_last_four"
+      ],
       "automatable": false,
       "category": "modify"
     },
     "apply_for_loan": {
       "name": "apply_for_loan",
       "description": "Submit a personal loan application.",
-      "required_params": ["loan_amount", "loan_term", "loan_purpose", "income"],
-      "optional_params": ["occupation"],
-      "preconditions": ["verify_identity"],
-      "side_effects": ["loan_amount", "loan_term", "loan_purpose"],
+      "required_params": [
+        "loan_amount",
+        "loan_term",
+        "loan_purpose",
+        "income"
+      ],
+      "optional_params": [
+        "occupation"
+      ],
+      "preconditions": [
+        "verify_identity"
+      ],
+      "side_effects": [
+        "loan_amount",
+        "loan_term",
+        "loan_purpose"
+      ],
       "automatable": false,
       "category": "escalation"
     },
@@ -140,7 +249,10 @@
       "description": "Retrieve the status of a submitted loan application.",
       "required_params": [],
       "optional_params": [],
-      "preconditions": ["verify_identity", "apply_for_loan"],
+      "preconditions": [
+        "verify_identity",
+        "apply_for_loan"
+      ],
       "side_effects": [],
       "automatable": true,
       "category": "query"
@@ -149,7 +261,9 @@
       "name": "escalate_to_human",
       "description": "Hand off the conversation to a human agent.",
       "required_params": [],
-      "optional_params": ["fraud_report_id"],
+      "optional_params": [
+        "fraud_report_id"
+      ],
       "preconditions": [],
       "side_effects": [],
       "automatable": false,
@@ -158,8 +272,13 @@
     "inform_customer": {
       "name": "inform_customer",
       "description": "Agent delivers information to customer (non-actionable, dialogue-flow).",
-      "required_params": ["message_content"],
-      "optional_params": ["attachment_url", "delivery_channel"],
+      "required_params": [
+        "message_content"
+      ],
+      "optional_params": [
+        "attachment_url",
+        "delivery_channel"
+      ],
       "preconditions": [],
       "side_effects": [],
       "automatable": true,
@@ -168,30 +287,54 @@
     "confirm_intent": {
       "name": "confirm_intent",
       "description": "Agent asks customer to clarify ambiguous intent (dialogue-flow).",
-      "required_params": ["ambiguous_slot", "candidate_values"],
-      "optional_params": ["disambiguation_question"],
+      "required_params": [
+        "ambiguous_slot",
+        "candidate_values"
+      ],
+      "optional_params": [
+        "disambiguation_question"
+      ],
       "preconditions": [],
-      "side_effects": ["await_user_response"],
+      "side_effects": [
+        "await_user_response"
+      ],
       "automatable": true,
       "category": "clarification"
     },
     "verify_identity_tfa": {
       "name": "verify_identity_tfa",
       "description": "Two-factor authentication for sensitive operations (must follow basic verify_identity).",
-      "required_params": ["card_last_four", "tfa_method", "tfa_code"],
+      "required_params": [
+        "card_last_four",
+        "tfa_method",
+        "tfa_code"
+      ],
       "optional_params": [],
-      "preconditions": ["verify_identity"],
-      "side_effects": ["set_verified_via_tfa_flag"],
+      "preconditions": [
+        "verify_identity"
+      ],
+      "side_effects": [
+        "set_verified_via_tfa_flag"
+      ],
       "automatable": true,
       "category": "security"
     },
     "request_supervisor_approval": {
       "name": "request_supervisor_approval",
       "description": "Escalate decision to supervisor (credit increase, large refund, exception).",
-      "required_params": ["request_type", "amount"],
-      "optional_params": ["justification"],
-      "preconditions": ["verify_identity_tfa"],
-      "side_effects": ["create_approval_ticket"],
+      "required_params": [
+        "request_type",
+        "amount"
+      ],
+      "optional_params": [
+        "justification"
+      ],
+      "preconditions": [
+        "verify_identity_tfa"
+      ],
+      "side_effects": [
+        "create_approval_ticket"
+      ],
       "automatable": false,
       "category": "escalation"
     }

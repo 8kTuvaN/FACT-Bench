@@ -5,13 +5,20 @@ Validates a single template against:
   2. Slot-name resolution: every slot referenced in initial_state, expected_state_after,
      state_operations (ADD/MODIFY/DELETE/KEEP slots + CASCADE.slots) must exist in the
      domain's slots.json.
-  3. Action-name resolution: agent_action.name must exist in domain actions.json AND
-     every key in agent_action.params must be in (action.required_params ∪ action.optional_params).
+  3. Action-name resolution + param resolution:
+       - agent_action.name must exist in domain actions.json
+       - every key in agent_action.params must be declared by the action
+       - each declared param must resolve to EITHER a domain slot OR a documented
+         meta-field in data/meta_fields/meta_fields.json
+       - meta-field usage is scope-checked against used_by_actions
+       - type='slot_reference' meta-fields must point to a real domain slot
   4. CASCADE formal criteria (all three):
        (a) common_cause: CASCADE.cause is a non-empty string.
        (b) semantic_integrality: len(CASCADE.slots) >= 3 AND all slots belong to the
            declared group per semantic_groups_<domain>.json.
        (c) non_decomposability: group is CASCADE-eligible (>= 3 slots in group).
+  4b. CASCADE op-coverage: every slot listed in a CASCADE must also have its own
+       per-slot ADD/MODIFY/DELETE/KEEP op in state_operations (added 2026-07-17 P0 fix).
   5. Operation enum: state_operations[*].op must be one of ADD/MODIFY/DELETE/KEEP/CASCADE.
   6. Semantic-group ref: state_operations CASCADE.group must exist in
      semantic_groups_<domain>.json.
@@ -65,6 +72,7 @@ SOP_FILES = {
     ],
 }
 SCHEMA_PATH = REPO_ROOT / "src" / "templates" / "schema" / "template_schema.json"
+META_FIELDS_PATH = REPO_ROOT / "data" / "meta_fields" / "meta_fields.json"
 
 ALLOWED_OPS = {"ADD", "MODIFY", "DELETE", "KEEP", "CASCADE"}
 
@@ -134,6 +142,21 @@ def _build_sop_index() -> dict[str, str]:
     return idx
 
 
+def _build_meta_field_index() -> dict[str, dict[str, Any]]:
+    """Returns {meta_field_name: {category, type, used_by_actions, ...}}.
+
+    Meta-fields (per data/meta_fields/meta_fields.json) are NOT dialogue state
+    slots — they are transient action parameters or control signals. An action
+    param that is neither a slot nor a documented meta-field is an audit risk
+    (silently untracked). Consulted by the action_param check to replace the
+    brittle action-name allowlist (2026-07-17 P0 audit follow-up).
+    """
+    if not META_FIELDS_PATH.exists():
+        return {}
+    d = _load_json(META_FIELDS_PATH)
+    return dict(d.get("meta_fields", {}))
+
+
 def validate(template: dict[str, Any], errors: list[ValidationError]) -> None:
     """In-place mutator: appends ValidationError entries for any rule violation."""
     tid = template.get("template_id", "<missing>")
@@ -164,6 +187,7 @@ def validate(template: dict[str, Any], errors: list[ValidationError]) -> None:
     group_idx = _build_group_index()
     action_idx = _build_action_index()
     sop_idx = _build_sop_index()
+    meta_idx = _build_meta_field_index()
 
     # -- 2. Slot-name resolution --
     init = template.get("initial_state", {})
@@ -182,19 +206,6 @@ def validate(template: dict[str, Any], errors: list[ValidationError]) -> None:
         allowed_params = set(action["required_params"]) | set(action["optional_params"])
         for k in (agent_action.get("params") or {}).keys():
             if k not in allowed_params:
-                # Permissive: dialogue-flow actions (inform_customer, confirm_intent,
-                # report_outage, dispute_bill, verify_identity_tfa, request_supervisor_approval)
-                # carry meta-fields that are NOT in the slot ontology. We still flag it
-                # so authors notice, but allow if action is in the dialogue-flow allowlist.
-                if action_name in {
-                    "inform_customer",
-                    "confirm_intent",
-                    "report_outage",
-                    "dispute_bill",
-                    "verify_identity_tfa",
-                    "request_supervisor_approval",
-                }:
-                    continue
                 errors.append(
                     ValidationError(
                         tid,
@@ -202,6 +213,45 @@ def validate(template: dict[str, Any], errors: list[ValidationError]) -> None:
                         f"param '{k}' not in {action_name}.required_params ∪ .optional_params",
                     )
                 )
+            else:
+                # The param is declared by the action. It must resolve to either:
+                #   (a) a domain slot (in slot_idx), OR
+                #   (b) a documented meta-field (in meta_idx).
+                # If neither, it's an undocumented param — audit risk.
+                if (domain, k) in slot_idx:
+                    pass  # slot-bound param, fine
+                elif k in meta_idx:
+                    mf = meta_idx[k]
+                    # cross-check: declared used_by_actions must include this action
+                    if action_name not in mf.get("used_by_actions", []):
+                        errors.append(
+                            ValidationError(
+                                tid,
+                                "meta_field_scope",
+                                f"meta-field '{k}' is declared for actions {mf.get('used_by_actions')}, "
+                                f"but used here by '{action_name}'",
+                            )
+                        )
+                    # slot_reference type meta-fields must point to a valid slot
+                    if mf.get("type") == "slot_reference":
+                        ref = (agent_action.get("params") or {}).get(k)
+                        if ref is not None and (domain, ref) not in slot_idx:
+                            errors.append(
+                                ValidationError(
+                                    tid,
+                                    "meta_field_slot_ref",
+                                    f"meta-field '{k}' has slot_reference type, but '{ref}' is not a slot in {domain}",
+                                )
+                            )
+                else:
+                    errors.append(
+                        ValidationError(
+                            tid,
+                            "action_param_unbound",
+                            f"param '{k}' on action '{action_name}' is neither a domain slot nor a documented meta-field. "
+                            f"Add '{k}' to {domain}_slots.json (state) or to data/meta_fields/meta_fields.json (transient).",
+                        )
+                    )
 
     # -- 4+6. Operation enum + CASCADE criteria + semantic-group ref --
     cascade_slots: set[str] = set()

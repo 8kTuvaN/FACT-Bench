@@ -373,11 +373,20 @@ def validate(template: dict[str, Any], errors: list[ValidationError]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="FACT-Bench template validator")
     parser.add_argument("paths", nargs="*", help="Template JSON files (or globs)")
-    parser.add_argument("--all", action="store_true", help="Validate every template under data/templates/")
+    parser.add_argument("--all", action="store_true", help="Validate every template under data/templates/ (incl. .jsonl batches)")
     args = parser.parse_args()
 
     if args.all:
-        files = sorted(glob.glob(str(REPO_ROOT / "data" / "templates" / "**" / "*.json"), recursive=True))
+        files = sorted(
+            f
+            for f in (
+                set(
+                    glob.glob(str(REPO_ROOT / "data" / "templates" / "**" / "*.json"), recursive=True)
+                    + glob.glob(str(REPO_ROOT / "data" / "templates" / "**" / "*.jsonl"), recursive=True)
+                )
+            )
+            if Path(f).name != "STATS.json"
+        )
     else:
         files = []
         for p in args.paths:
@@ -389,21 +398,40 @@ def main() -> int:
         return 1
 
     all_errors: list[ValidationError] = []
+    total = 0
     for f in files:
-        try:
-            tpl = _load_json(Path(f))
-        except Exception as e:
-            all_errors.append(ValidationError(f, "load", f"could not parse JSON: {e}"))
-            continue
-        validate(tpl, all_errors)
+        path = Path(f)
+        if path.suffix == ".jsonl":
+            with open(path, "r", encoding="utf-8") as fh:
+                for line_no, line in enumerate(fh, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    total += 1
+                    try:
+                        tpl = json.loads(line)
+                    except Exception as e:
+                        all_errors.append(ValidationError(f"{path.name}:L{line_no}", "load", f"could not parse: {e}"))
+                        continue
+                    validate(tpl, all_errors)
+        else:
+            total += 1
+            try:
+                tpl = _load_json(path)
+            except Exception as e:
+                all_errors.append(ValidationError(f, "load", f"could not parse JSON: {e}"))
+                continue
+            validate(tpl, all_errors)
 
     if all_errors:
-        print(f"[validator] FAILED — {len(all_errors)} error(s) across {len(files)} file(s):", file=sys.stderr)
-        for e in all_errors:
+        print(f"[validator] FAILED — {len(all_errors)} error(s) across {total} template(s) in {len(files)} file(s):", file=sys.stderr)
+        for e in all_errors[:50]:
             print(f"  {e}", file=sys.stderr)
+        if len(all_errors) > 50:
+            print(f"  ... ({len(all_errors) - 50} more)", file=sys.stderr)
         return 1
 
-    print(f"[validator] OK — {len(files)} template(s) passed all checks")
+    print(f"[validator] OK — {total} template(s) passed all checks ({len(files)} file(s))")
     return 0
 
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T03:19:30.372739+00:00",
+  "generated_at": "2026-07-21T02:19:44.308137+00:00",
   "generator": "src/templates/batch_generator.py",
   "provider": "mock",
   "total_templates": 300,
@@ -13,43 +13,54 @@
     "simple": 160
   },
   "by_scenario": {
-    "sop_violation": 14,
-    "no_action_abstention": 13,
-    "target_shift": 16,
-    "cascade_autopay_enable": 11,
-    "multi_slot_mixed": 22,
-    "loan_application": 22,
-    "fraud_report": 22,
-    "single_add": 29,
-    "single_modify": 30,
-    "pure_query": 30,
+    "sop_violation": 8,
+    "no_action_abstention": 7,
+    "target_shift": 9,
+    "supervisor_approval": 12,
+    "dialogue_inform": 25,
+    "dialogue_confirm": 25,
+    "cascade_autopay_enable": 6,
+    "multi_slot_mixed": 12,
+    "loan_application": 11,
+    "fraud_report": 11,
+    "replacement": 10,
+    "dispute_followup": 10,
+    "loan_followup": 10,
+    "single_add": 14,
+    "single_modify": 15,
+    "pure_query": 15,
     "single_delete": 12,
-    "device_activation": 16,
-    "cascade_plan_change": 11,
-    "cascade_addon_subscribe": 11,
-    "outage_report": 25,
-    "dispute_bill": 16
+    "identity_verification": 12,
+    "device_activation": 9,
+    "device_upgrade": 7,
+    "cascade_plan_change": 6,
+    "cascade_addon_subscribe": 6,
+    "outage_report": 11,
+    "service_resume": 10,
+    "service_suspend": 10,
+    "contract_check": 10,
+    "dispute_bill": 7
   },
   "operation_distribution": {
     "MODIFY": {
-      "count": 198,
-      "pct": 10.8
+      "count": 189,
+      "pct": 14.79
     },
     "KEEP": {
-      "count": 1163,
-      "pct": 63.41
-    },
-    "ADD": {
-      "count": 284,
-      "pct": 15.49
+      "count": 641,
+      "pct": 50.16
     },
     "DELETE": {
-      "count": 102,
-      "pct": 5.56
+      "count": 157,
+      "pct": 12.28
+    },
+    "ADD": {
+      "count": 244,
+      "pct": 19.09
     },
     "CASCADE": {
-      "count": 87,
-      "pct": 4.74
+      "count": 47,
+      "pct": 3.68
     }
   },
   "operation_targets_pct": {
@@ -61,213 +72,215 @@
   },
   "action_coverage": {
     "finance": {
-      "verify_identity": 0,
-      "check_balance": 14,
-      "make_payment": 14,
-      "update_contact_info": 50,
-      "enable_autopay": 11,
-      "disable_autopay": 12,
-      "request_credit_limit_increase": 7,
-      "set_temporary_limit": 6,
-      "report_fraud": 22,
-      "dispute_transaction": 0,
-      "check_dispute_status": 0,
-      "issue_replacement_card": 0,
-      "apply_for_loan": 31,
-      "check_loan_status": 0,
-      "escalate_to_human": 14,
-      "inform_customer": 0,
-      "confirm_intent": 0,
-      "verify_identity_tfa": 0,
-      "request_supervisor_approval": 0
+      "verify_identity": 9,
+      "check_balance": 7,
+      "make_payment": 7,
+      "update_contact_info": 28,
+      "enable_autopay": 6,
+      "disable_autopay": 6,
+      "request_credit_limit_increase": 4,
+      "set_temporary_limit": 4,
+      "report_fraud": 11,
+      "dispute_transaction": 6,
+      "check_dispute_status": 4,
+      "issue_replacement_card": 10,
+      "apply_for_loan": 12,
+      "check_loan_status": 10,
+      "escalate_to_human": 8,
+      "inform_customer": 25,
+      "confirm_intent": 25,
+      "verify_identity_tfa": 3,
+      "request_supervisor_approval": 12
     },
     "telecom": {
-      "verify_identity": 0,
-      "check_data_usage": 16,
-      "change_plan": 11,
-      "add_addon": 11,
-      "remove_addon": 0,
-      "update_contact_info": 50,
-      "suspend_service": 1,
-      "resume_service": 0,
-      "activate_device": 16,
-      "report_lost_device": 7,
-      "upgrade_device": 0,
-      "pay_bill": 6,
-      "change_billing_cycle": 10,
-      "check_contract_status": 0,
-      "escalate_to_human": 14,
-      "dispute_bill": 16,
-      "report_outage": 25,
-      "inform_customer": 0,
-      "confirm_intent": 0
+      "verify_identity": 9,
+      "check_data_usage": 8,
+      "change_plan": 6,
+      "add_addon": 6,
+      "remove_addon": 6,
+      "update_contact_info": 28,
+      "suspend_service": 11,
+      "resume_service": 10,
+      "activate_device": 9,
+      "report_lost_device": 4,
+      "upgrade_device": 7,
+      "pay_bill": 4,
+      "change_billing_cycle": 4,
+      "check_contract_status": 10,
+      "escalate_to_human": 8,
+      "dispute_bill": 7,
+      "report_outage": 11,
+      "inform_customer": 25,
+      "confirm_intent": 25
     }
   },
+  "action_coverage_target": "each action >= 3 templates (per plan.md Day 11)",
+  "action_coverage_under_target": [],
   "slot_coverage": {
     "finance": {
       "card_last_four": {
-        "total_uses": 81,
-        "non_keep_uses": 14
+        "total_uses": 51,
+        "non_keep_uses": 17
       },
       "card_type": {
-        "total_uses": 25,
-        "non_keep_uses": 2
-      },
-      "card_holder_name": {
-        "total_uses": 83,
+        "total_uses": 14,
         "non_keep_uses": 9
       },
+      "card_holder_name": {
+        "total_uses": 49,
+        "non_keep_uses": 14
+      },
       "bill_amount": {
-        "total_uses": 32,
+        "total_uses": 19,
         "non_keep_uses": 10
       },
       "due_date": {
-        "total_uses": 32,
-        "non_keep_uses": 11
+        "total_uses": 23,
+        "non_keep_uses": 7
       },
       "minimum_payment": {
-        "total_uses": 27,
-        "non_keep_uses": 5
+        "total_uses": 20,
+        "non_keep_uses": 13
       },
       "autopay": {
-        "total_uses": 36,
-        "non_keep_uses": 26
+        "total_uses": 29,
+        "non_keep_uses": 20
       },
       "autopay_bank": {
-        "total_uses": 50,
-        "non_keep_uses": 29
+        "total_uses": 32,
+        "non_keep_uses": 22
       },
       "autopay_date": {
-        "total_uses": 33,
-        "non_keep_uses": 25
+        "total_uses": 37,
+        "non_keep_uses": 22
       },
       "credit_limit": {
-        "total_uses": 28,
-        "non_keep_uses": 3
+        "total_uses": 19,
+        "non_keep_uses": 11
       },
       "temp_limit": {
-        "total_uses": 29,
-        "non_keep_uses": 5
+        "total_uses": 24,
+        "non_keep_uses": 9
       },
       "phone": {
-        "total_uses": 151,
-        "non_keep_uses": 25
+        "total_uses": 102,
+        "non_keep_uses": 32
       },
       "email": {
-        "total_uses": 161,
-        "non_keep_uses": 36
+        "total_uses": 100,
+        "non_keep_uses": 33
       },
       "address": {
-        "total_uses": 108,
-        "non_keep_uses": 28
+        "total_uses": 72,
+        "non_keep_uses": 27
       },
       "fraud_report_id": {
-        "total_uses": 70,
-        "non_keep_uses": 49
+        "total_uses": 39,
+        "non_keep_uses": 28
       },
       "fraud_amount": {
-        "total_uses": 65,
-        "non_keep_uses": 49
+        "total_uses": 42,
+        "non_keep_uses": 32
       },
       "dispute_status": {
-        "total_uses": 65,
-        "non_keep_uses": 49
+        "total_uses": 38,
+        "non_keep_uses": 31
       },
       "loan_amount": {
-        "total_uses": 32,
-        "non_keep_uses": 10
+        "total_uses": 21,
+        "non_keep_uses": 9
       },
       "loan_term": {
-        "total_uses": 20,
-        "non_keep_uses": 4
+        "total_uses": 18,
+        "non_keep_uses": 13
       },
       "loan_purpose": {
-        "total_uses": 28,
-        "non_keep_uses": 7
+        "total_uses": 20,
+        "non_keep_uses": 11
       },
       "income": {
-        "total_uses": 19,
-        "non_keep_uses": 2
+        "total_uses": 11,
+        "non_keep_uses": 3
       },
       "occupation": {
-        "total_uses": 35,
-        "non_keep_uses": 7
+        "total_uses": 22,
+        "non_keep_uses": 8
       }
     },
     "telecom": {
       "plan_name": {
-        "total_uses": 91,
-        "non_keep_uses": 28
+        "total_uses": 63,
+        "non_keep_uses": 26
       },
       "plan_price": {
-        "total_uses": 57,
-        "non_keep_uses": 27
+        "total_uses": 38,
+        "non_keep_uses": 24
       },
       "data_allowance": {
-        "total_uses": 54,
-        "non_keep_uses": 32
+        "total_uses": 41,
+        "non_keep_uses": 20
       },
       "addon_name": {
-        "total_uses": 52,
-        "non_keep_uses": 32
-      },
-      "addon_price": {
-        "total_uses": 59,
-        "non_keep_uses": 34
-      },
-      "addon_status": {
-        "total_uses": 43,
-        "non_keep_uses": 25
-      },
-      "device_model": {
-        "total_uses": 53,
-        "non_keep_uses": 37
-      },
-      "imei": {
-        "total_uses": 52,
-        "non_keep_uses": 37
-      },
-      "device_installment": {
-        "total_uses": 49,
-        "non_keep_uses": 33
-      },
-      "phone": {
-        "total_uses": 151,
-        "non_keep_uses": 25
-      },
-      "email": {
-        "total_uses": 161,
-        "non_keep_uses": 36
-      },
-      "address": {
-        "total_uses": 108,
+        "total_uses": 37,
         "non_keep_uses": 28
       },
+      "addon_price": {
+        "total_uses": 34,
+        "non_keep_uses": 23
+      },
+      "addon_status": {
+        "total_uses": 37,
+        "non_keep_uses": 24
+      },
+      "device_model": {
+        "total_uses": 41,
+        "non_keep_uses": 29
+      },
+      "imei": {
+        "total_uses": 33,
+        "non_keep_uses": 25
+      },
+      "device_installment": {
+        "total_uses": 35,
+        "non_keep_uses": 24
+      },
+      "phone": {
+        "total_uses": 102,
+        "non_keep_uses": 32
+      },
+      "email": {
+        "total_uses": 100,
+        "non_keep_uses": 33
+      },
+      "address": {
+        "total_uses": 72,
+        "non_keep_uses": 27
+      },
       "service_status": {
-        "total_uses": 57,
-        "non_keep_uses": 44
+        "total_uses": 39,
+        "non_keep_uses": 30
       },
       "activation_date": {
-        "total_uses": 55,
-        "non_keep_uses": 38
+        "total_uses": 40,
+        "non_keep_uses": 29
       },
       "contract_term": {
-        "total_uses": 56,
-        "non_keep_uses": 36
+        "total_uses": 35,
+        "non_keep_uses": 24
       },
       "billing_amount": {
-        "total_uses": 23,
-        "non_keep_uses": 9
+        "total_uses": 25,
+        "non_keep_uses": 12
       },
       "billing_cycle": {
-        "total_uses": 27,
-        "non_keep_uses": 9
+        "total_uses": 22,
+        "non_keep_uses": 13
       },
       "payment_method": {
-        "total_uses": 70,
+        "total_uses": 50,
         "non_keep_uses": 19
       }
     }
   },
-  "notes": "Generated by MockClient (deterministic, schema-valid). KEEP ratio above target reflects that the mock emits explicit KEEP for every unchanged slot — intentional to support T1 SOC evaluation. Re-run with --provider openai / anthropic and a real API key to regenerate with linguistic diversity and balanced op distributions. All 300 templates pass src/templates/validator.py."
+  "notes": "Generated by MockClient (deterministic, schema-valid, all values match slot regex/enum/min/max). Action coverage target met: all 33 unique action names exercised >=3 times (5 actions are shared across domains, so 19+19 domain counts overlap to 33 union). Re-run with --provider openai/anthropic for linguistic diversity."
 }

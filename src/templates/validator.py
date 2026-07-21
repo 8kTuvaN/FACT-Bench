@@ -184,7 +184,7 @@ def _validate_slot_value(slot_name: str, value: Any, slot_def: dict[str, Any]) -
         return f"value {value!r} not in enum {enum}"
     if "regex" in val and isinstance(value, str):
         import re
-        if not re.match(val["regex"], value):
+        if not re.fullmatch(val["regex"], value):
             return f"value {value!r} does not match regex {val['regex']!r}"
     if "min" in val and isinstance(value, (int, float)):
         if value < val["min"]:

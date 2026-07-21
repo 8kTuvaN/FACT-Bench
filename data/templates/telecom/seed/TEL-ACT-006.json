@@ -5,7 +5,7 @@
   "scenario_type": "device_activation",
   "initial_state": {
     "phone": "13800138000",
-    "service_status": "pending",
+    "service_status": "active",
     "activation_date": null,
     "device_model": null,
     "imei": null
@@ -25,7 +25,7 @@
     {"op": "ADD", "slot": "device_model", "value": "Galaxy S25"},
     {"op": "ADD", "slot": "imei", "value": "356938035643809"},
     {"op": "KEEP", "slot": "device_installment"},
-    {"op": "MODIFY", "slot": "service_status", "old_value": "pending", "new_value": "active"},
+    {"op": "MODIFY", "slot": "service_status", "old_value": "suspended", "new_value": "active"},
     {"op": "ADD", "slot": "activation_date", "value": "2026-07-17"},
     {"op": "KEEP", "slot": "contract_term"}
   ],

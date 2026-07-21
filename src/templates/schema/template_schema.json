@@ -51,7 +51,18 @@
         "outage_report",
         "dispute_bill",
         "loan_application",
-        "fraud_report"
+        "fraud_report",
+        "identity_verification",
+        "dialogue_inform",
+        "dialogue_confirm",
+        "dispute_followup",
+        "loan_followup",
+        "replacement",
+        "supervisor_approval",
+        "service_resume",
+        "service_suspend",
+        "device_upgrade",
+        "contract_check"
       ],
       "description": "Scenario category. Used by distribution_check.py and seed audit."
     },

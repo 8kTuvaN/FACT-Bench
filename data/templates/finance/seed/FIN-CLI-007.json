@@ -5,7 +5,7 @@
   "scenario_type": "multi_slot_mixed",
   "initial_state": {
     "card_last_four": "5544",
-    "card_holder_name": "Hannah Müller",
+    "card_holder_name": "Hannah K. Mueller",
     "credit_limit": 8000,
     "temp_limit": null,
     "income": 95000,
@@ -28,7 +28,7 @@
   ],
   "expected_state_after": {
     "card_last_four": "5544",
-    "card_holder_name": "Hannah Müller",
+    "card_holder_name": "Hannah K. Mueller",
     "credit_limit": 8000,
     "temp_limit": 12000,
     "income": 95000,

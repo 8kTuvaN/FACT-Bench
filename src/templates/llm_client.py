@@ -69,28 +69,41 @@ class MockClient:
         import random
 
         self._rng = random.Random(seed)
+        # Action usage tracking (per domain) — feeds coverage-aware _pick_action.
+        self._action_usage: dict[str, dict[str, int]] = {"finance": {}, "telecom": {}}
         self._scenario_pool: dict[tuple[str, str], list[str]] = {
             ("finance", "simple"): [
                 "pure_query", "single_add", "single_modify", "single_delete",
                 "loan_application", "fraud_report",
+                "identity_verification", "dispute_followup", "loan_followup",
+                "replacement", "supervisor_approval",
+                "dialogue_inform", "dialogue_confirm",
             ],
             ("telecom", "simple"): [
-                "pure_query", "single_add", "single_modify", "outage_report",
-                "dispute_bill",
+                "pure_query", "single_add", "single_modify",
+                "outage_report", "dispute_bill",
+                "identity_verification", "service_suspend", "service_resume",
+                "contract_check", "dialogue_inform", "dialogue_confirm",
             ],
             ("finance", "medium"): [
                 "cascade_autopay_enable", "multi_slot_mixed", "target_shift",
                 "loan_application", "fraud_report",
+                "replacement", "dispute_followup", "loan_followup",
+                "supervisor_approval", "dialogue_inform", "dialogue_confirm",
             ],
             ("telecom", "medium"): [
                 "cascade_plan_change", "cascade_addon_subscribe",
                 "device_activation", "multi_slot_mixed",
+                "device_upgrade", "service_resume", "service_suspend",
+                "contract_check", "dialogue_inform", "dialogue_confirm",
             ],
             ("finance", "complex"): [
                 "sop_violation", "no_action_abstention", "target_shift",
+                "supervisor_approval", "dialogue_inform", "dialogue_confirm",
             ],
             ("telecom", "complex"): [
                 "sop_violation", "no_action_abstention", "device_activation",
+                "device_upgrade", "dialogue_inform", "dialogue_confirm",
             ],
         }
 
@@ -137,6 +150,8 @@ class MockClient:
 
         tid = self._make_tid(domain, scenario, idx)
         user_seed = self._user_intent(scenario, rng)
+        # Track action usage for coverage-aware next picks
+        self._action_usage[domain][action_name] = self._action_usage[domain].get(action_name, 0) + 1
         return {
             "template_id": tid,
             "domain": domain,
@@ -152,14 +167,32 @@ class MockClient:
 
     # --- composition helpers ---
     def _pick_action(self, scenario: str, domain: str, action_pool):
-        # Map scenarios to a small set of action candidates; pick one.
+        """Coverage-aware action picker.
+
+        Two-stage: (1) check if any action is below COVERAGE_TARGET; if so,
+        force-pick the most under-covered valid action for this scenario.
+        (2) Otherwise pick from scenario-specific candidates, weighted toward
+        less-covered actions to avoid clumping.
+        """
+        COVERAGE_TARGET = 3
         candidates = {
-            "pure_query": ["check_balance" if domain == "finance" else "check_data_usage"],
+            "pure_query": ["check_balance" if domain == "finance" else "check_data_usage", "check_data_usage" if domain == "finance" else "check_data_usage"],
             "single_add": ["update_contact_info", "apply_for_loan"],
             "single_modify": ["make_payment" if domain == "finance" else "pay_bill", "change_billing_cycle"],
             "single_delete": ["disable_autopay", "remove_addon"],
             "loan_application": ["apply_for_loan"],
             "fraud_report": ["report_fraud"],
+            "dispute_followup": ["dispute_transaction", "check_dispute_status"],
+            "loan_followup": ["check_loan_status"],
+            "replacement": ["issue_replacement_card"],
+            "identity_verification": ["verify_identity", "verify_identity_tfa"],
+            "supervisor_approval": ["request_supervisor_approval"],
+            "dialogue_inform": ["inform_customer"],
+            "dialogue_confirm": ["confirm_intent"],
+            "service_resume": ["resume_service"],
+            "service_suspend": ["suspend_service"],
+            "device_upgrade": ["upgrade_device"],
+            "contract_check": ["check_contract_status"],
             "cascade_autopay_enable": ["enable_autopay"],
             "multi_slot_mixed": ["set_temporary_limit", "update_contact_info"],
             "target_shift": ["update_contact_info"],
@@ -175,6 +208,14 @@ class MockClient:
         valid = [a for a in opts if a in action_pool]
         if not valid:
             valid = list(action_pool.keys())
+
+        # Coverage pressure: if any action in valid has < COVERAGE_TARGET uses,
+        # force-pick the most under-covered one.
+        usage = self._action_usage[domain]
+        under = [a for a in valid if usage.get(a, 0) < COVERAGE_TARGET]
+        if under:
+            return min(under, key=lambda a: usage.get(a, 0))
+        # Otherwise random from valid
         return self._rng.choice(valid)
 
     def _init_state(self, domain: str, slot_pool: dict, rng) -> dict:
@@ -215,6 +256,8 @@ class MockClient:
         return rules
 
     def _user_intent(self, scenario: str, rng) -> dict:
+        # Two distinct text fields: user_goal (intent) and agent_paraphrase
+        # (natural-language surface form for dialogue generation).
         goals = {
             "pure_query": "Customer wants to check their current account status.",
             "single_add": "Customer wants to update a personal detail on file.",
@@ -232,9 +275,55 @@ class MockClient:
             "dispute_bill": "Customer wants to dispute a charge on their bill.",
             "sop_violation": "Customer request triggers an SOP-compliance decision point.",
             "no_action_abstention": "Customer request cannot be safely auto-executed; escalate.",
+            "dispute_followup": "Customer follows up on an existing dispute.",
+            "loan_followup": "Customer follows up on a pending loan application.",
+            "replacement": "Customer wants a replacement card shipped.",
+            "identity_verification": "Customer begins the call by verifying identity.",
+            "supervisor_approval": "Customer request needs supervisor authority.",
+            "dialogue_inform": "Agent delivers information back to the customer.",
+            "dialogue_confirm": "Agent asks the customer to clarify an ambiguous intent.",
+            "service_resume": "Customer wants to resume a previously suspended line.",
+            "service_suspend": "Customer wants to suspend their service.",
+            "device_upgrade": "Customer wants to upgrade to a new device.",
+            "contract_check": "Customer wants to check their remaining contract term.",
+        }
+        # Paraphrases are scenario-specific natural-language variants
+        paraphrases = {
+            "pure_query": "What's my current balance?",
+            "single_add": "Can you add this to my account?",
+            "single_modify": "I'd like to change a setting.",
+            "single_delete": "Please remove that for me.",
+            "loan_application": "I want to take out a loan.",
+            "fraud_report": "There's a charge I didn't make.",
+            "cascade_autopay_enable": "Set up autopay starting next month.",
+            "multi_slot_mixed": "I need to update a few things at once.",
+            "target_shift": "Oh, and one more thing...",
+            "cascade_plan_change": "I'd like to switch plans.",
+            "cascade_addon_subscribe": "Add this feature to my line.",
+            "device_activation": "Help me activate my new device.",
+            "outage_report": "There's an outage in my area.",
+            "dispute_bill": "I want to dispute a charge.",
+            "sop_violation": "This is a sensitive request.",
+            "no_action_abstention": "Can you check on something?",
+            "dispute_followup": "Any update on my dispute?",
+            "loan_followup": "How's my loan application coming?",
+            "replacement": "I need a new card.",
+            "identity_verification": "Let me verify who I am first.",
+            "supervisor_approval": "This needs to go up the chain.",
+            "dialogue_inform": "Just FYI on your account.",
+            "dialogue_confirm": "Quick — which option did you mean?",
+            "service_resume": "Reactivate my line, please.",
+            "service_suspend": "Pause my service temporarily.",
+            "device_upgrade": "I'm ready for an upgrade.",
+            "contract_check": "How long is left on my contract?",
         }
         g = goals.get(scenario, "Generic customer request.")
-        return {"user_goal": g, "agent_paraphrase": g, "user_persona": rng.choice(["Direct.", "Polite.", "Impatient.", "Anxious.", "Curious."])}
+        p = paraphrases.get(scenario, "Could you help me with something?")
+        return {
+            "user_goal": g,
+            "agent_paraphrase": p,
+            "user_persona": rng.choice(["Direct.", "Polite.", "Impatient.", "Anxious.", "Curious."])
+        }
 
     def _make_tid(self, domain: str, scenario: str, idx: int) -> str:
         # Map scenario to a 3-5 letter code

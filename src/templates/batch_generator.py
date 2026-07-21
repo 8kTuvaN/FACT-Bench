@@ -62,24 +62,35 @@ SCENARIO_POOLS: dict[tuple[str, str], list[str]] = {
     ("finance", "simple"): [
         "pure_query", "single_add", "single_modify", "single_delete",
         "loan_application", "fraud_report",
+        "identity_verification", "dispute_followup", "loan_followup",
+        "replacement", "supervisor_approval",
+        "dialogue_inform", "dialogue_confirm",
     ],
     ("telecom", "simple"): [
-        "pure_query", "single_add", "single_modify",
+        "pure_query", "single_add", "single_modify", "single_delete",
         "outage_report", "dispute_bill",
+        "identity_verification", "service_suspend", "service_resume",
+        "contract_check", "dialogue_inform", "dialogue_confirm",
     ],
     ("finance", "medium"): [
         "cascade_autopay_enable", "multi_slot_mixed", "target_shift",
         "loan_application", "fraud_report",
+        "replacement", "dispute_followup", "loan_followup",
+        "supervisor_approval", "dialogue_inform", "dialogue_confirm",
     ],
     ("telecom", "medium"): [
         "cascade_plan_change", "cascade_addon_subscribe",
         "device_activation", "multi_slot_mixed", "outage_report",
+        "device_upgrade", "service_resume", "service_suspend",
+        "contract_check", "dialogue_inform", "dialogue_confirm",
     ],
     ("finance", "complex"): [
         "sop_violation", "no_action_abstention", "target_shift",
+        "supervisor_approval", "dialogue_inform", "dialogue_confirm",
     ],
     ("telecom", "complex"): [
         "sop_violation", "no_action_abstention", "device_activation",
+        "device_upgrade", "dialogue_inform", "dialogue_confirm",
     ],
 }
 
@@ -105,32 +116,71 @@ def _ontology() -> dict[str, Any]:
 
 
 def _gen_value(slot_name: str, slot: dict, rng: random.Random) -> Any:
-    """Generate a concrete value for a slot that satisfies its validation."""
+    """Generate a concrete value for a slot that satisfies its validation.
+
+    Brute-force retry: generate a candidate, then check it against the slot's
+    regex / enum / min / max. This is more robust than pattern-matching the
+    regex string by hand (which is what caused the 12-digit phone bug).
+    """
+    import re as _re
     if "enum" in slot and slot["enum"]:
         return rng.choice(slot["enum"])
-    vmin = slot.get("validation", {}).get("min")
-    vmax = slot.get("validation", {}).get("max")
+    val = slot.get("validation", {})
+    vmin = val.get("min")
+    vmax = val.get("max")
+    rx = val.get("regex", "")
     stype = slot["type"]
-    if stype == "string":
-        rx = slot.get("validation", {}).get("regex", "")
+
+    def _try_str(builder, max_attempts: int = 10) -> str:
+        for _ in range(max_attempts):
+            cand = builder()
+            if rx and not _re.fullmatch(rx, cand):
+                continue
+            return cand
+        return builder()  # give up and return last candidate
+
+    if stype in ("string", "date"):
+        # Pick a builder based on shape of the regex
         if "1[3-9]\\d{9}" in rx:
-            return "138" + "".join(rng.choices("0123456789", k=9))
+            # Phone: 11 digits (1 + [3-9] + 9 digits)
+            return _try_str(lambda: "1" + rng.choice("3456789") + "".join(rng.choices("0123456789", k=9)))
         if "@" in rx:
-            users = ["alex.chen", "priya.shankar", "jordan.rivera", "wei.li", "kai.tanaka"]
-            return rng.choice(users) + "@example.com"
+            users = ["alex.chen", "priya.shankar", "jordan.rivera", "wei.li", "kai.tanaka", "sam.patel", "rosa.lim"]
+            return _try_str(lambda: rng.choice(users) + "@example.com")
+        # card_holder_name / similar name regex: ASCII-only names (no ü/ñ/etc.)
+        if rx.startswith("^[A-Za-z][A-Za-z .'-]{1,60}$"):
+            names = [
+                "Jordan A. Rivera", "Priya N. Shankar", "Marco P. Delgado",
+                "Hannah K. Mueller", "Wei L. Chen", "Kai T. Tanaka",
+                "Samir R. Patel", "Rosa M. Lim", "Aiyana B. Lightfoot",
+                "Liang Q. Wu", "Anders J. Berg", "Marie C. Dubois",
+            ]
+            return _try_str(lambda: rng.choice(names))
         if "FR-\\d{8}" in rx:
-            return "FR-" + "".join(rng.choices("0123456789", k=8))
+            return _try_str(lambda: "FR-" + "".join(rng.choices("0123456789", k=8)))
         if "^\\d{4}$" in rx:
-            return "".join(rng.choices("0123456789", k=4))
+            return _try_str(lambda: "".join(rng.choices("0123456789", k=4)))
         if "^\\d{15}$" in rx:
-            return "".join(rng.choices("0123456789", k=15))
+            return _try_str(lambda: "".join(rng.choices("0123456789", k=15)))
         if rx.startswith("^([1-9]|1[0-9]|2[0-8])"):
-            return str(rng.randint(1, 28))
-        if "YYYY-MM-DD" in rx:
-            return f"2026-{rng.randint(1,12):02d}-{rng.randint(1,28):02d}"
-        # generic non-empty string
-        pool = ["First National Bank", "Wells Fargo", "HSBC UK", "Chase", "Citi"]
-        return rng.choice(pool)
+            return _try_str(lambda: str(rng.randint(1, 28)))
+        # Date regex shape: ^\d{4}-\d{2}-\d{2}$  (matches both 'due_date' and 'activation_date')
+        if rx.startswith("^\\d{4}-\\d{2}-\\d{2}$"):
+            return _try_str(lambda: f"2026-{rng.randint(1,12):02d}-{rng.randint(1,28):02d}")
+        # Generic string with min-length constraint (most string slots require >= 2-5 chars)
+        # Extract min length from regex like ^.{N,M}$  or  ^.{N,}$
+        m = _re.search(r"\.\{(\d+),", rx)
+        min_len = int(m.group(1)) if m else 5
+        pool = [
+            "First National Bank", "Wells Fargo Bank", "HSBC UK Holdings",
+            "JPMorgan Chase Bank", "Bank of America NA",
+            "Home Renovation Project", "Medical Expenses Coverage",
+            "Wedding Ceremony Fund", "Vehicle Purchase Loan",
+            "Education Tuition Fees", "742 Evergreen Terrace, Springfield IL",
+            "88 Market Street, San Jose CA", "221B Baker Street, London UK",
+        ]
+        # Re-pick if regex doesn't match (handles e.g. min-length constraints)
+        return _try_str(lambda: rng.choice(pool))
     if stype == "integer":
         lo = int(vmin) if vmin is not None else 0
         hi = int(vmax) if vmax is not None else 1000
@@ -254,8 +304,14 @@ def _apply_action_to_state(
             candidates = [x for x in init if x in slot_pool]
         s = rng.choice(candidates)
         old = init[s]
-        final[s] = _gen_value(s, slot_pool[s], rng)
-        ops.append({"op": "MODIFY", "slot": s, "old_value": old, "new_value": final[s]})
+        # Ensure the value actually changes (no-op MODIFY is forbidden)
+        new_val = _gen_value(s, slot_pool[s], rng)
+        attempts = 0
+        while new_val == old and attempts < 5:
+            new_val = _gen_value(s, slot_pool[s], rng)
+            attempts += 1
+        final[s] = new_val
+        ops.append({"op": "MODIFY", "slot": s, "old_value": old, "new_value": new_val})
         for x in init:
             if x != s:
                 ops.append({"op": "KEEP", "slot": x})
@@ -335,9 +391,12 @@ def _apply_action_to_state(
                     continue
                 s = rng.choice(candidates)
                 old = init[s]
-                if rng.random() < 0.7:
-                    final[s] = _gen_value(s, slot_pool[s], rng)
-                ops.append({"op": "MODIFY", "slot": s, "old_value": old, "new_value": final[s]})
+                # Always regenerate value for MODIFY so old != new (no-op MODIFY is forbidden)
+                new_val = _gen_value(s, slot_pool[s], rng)
+                while new_val == old:  # ensure actual change
+                    new_val = _gen_value(s, slot_pool[s], rng)
+                final[s] = new_val
+                ops.append({"op": "MODIFY", "slot": s, "old_value": old, "new_value": new_val})
             else:  # delete
                 candidates = [x for x in init if x not in {o.get("slot") for o in ops}]
                 if not candidates:

@@ -1,11 +1,11 @@
 {
   "domain": "telecom",
   "complexity": "medium",
-  "version": "1.0.0",
-  "description": "Telecom domain Medium SOP rules. Inherits all 6 simple SOP rules (TS-01..TS-06) and adds 6 medium-only rules (TM-01..TM-06) for multi-step / conditional logic. Total 12 rules. Used by T5 (SCD). Slot/action references must resolve.",
-  "rule_count": 12,
+  "version": "1.1.0",
+  "description": "Telecom domain Medium SOP rules. Inherits all 7 simple SOP rules (TS-01..TS-07) and adds 7 medium-only rules (TM-01..TM-07) for multi-step / conditional logic. Total 14 rules. Used by T5 (SCD). Slot/action references must resolve. v1.1.0 (2026-07-17 audit): split TM-04 to separate lost-device vs outage scopes; added rule_type + severity_on_violation.",
+  "rule_count": 14,
   "inherits": ["telecom_sop_simple.json"],
-  "additional_rule_count": 6,
+  "additional_rule_count": 7,
   "additional_rules": [
     {
       "id": "TM-01",
@@ -13,7 +13,9 @@
       "description": "change_plan must update the entire plan_spec group coherently (plan_name, plan_price, data_allowance all change together). This is a CASCADE case (serves C2).",
       "applies_to_actions": ["change_plan"],
       "requires_slots": ["plan_name", "plan_price", "data_allowance"],
-      "constraint": "After change_plan: (plan_name in {Basic,Standard,Premium,Unlimited}) AND (plan_price >= 0) AND (data_allowance >= 0) and the change is internally consistent (e.g., Unlimited implies plan_price >= Premium.price)."
+      "constraint": "After change_plan: (plan_name in {Basic,Standard,Premium,Unlimited}) AND (plan_price >= 0) AND (data_allowance >= 0) and the change is internally consistent (e.g., Unlimited implies plan_price >= Premium.price).",
+      "rule_type": "CASCADE_ATOMICITY",
+      "severity_on_violation": "high"
     },
     {
       "id": "TM-02",
@@ -21,7 +23,9 @@
       "description": "add_addon must set the entire addon_config group (addon_name, addon_price, addon_status='active' or 'pending') in one transaction.",
       "applies_to_actions": ["add_addon"],
       "requires_slots": ["addon_name", "addon_price", "addon_status"],
-      "constraint": "After add_addon: addon_status in {active, pending} and addon_price >= 0. The full addon_config group must be coherent."
+      "constraint": "After add_addon: addon_status in {active, pending} and addon_price >= 0. The full addon_config group must be coherent.",
+      "rule_type": "CASCADE_ATOMICITY",
+      "severity_on_violation": "high"
     },
     {
       "id": "TM-03",
@@ -29,15 +33,19 @@
       "description": "activate_device must set the device_info group AND transition service_info (activation_date set, service_status='active'). Missing service_info update is a CASCADE violation.",
       "applies_to_actions": ["activate_device"],
       "requires_slots": ["device_model", "imei", "activation_date", "service_status"],
-      "constraint": "After activate_device: device_info group fully populated AND activation_date non-null AND service_status == 'active'."
+      "constraint": "After activate_device: device_info group fully populated AND activation_date non-null AND service_status == 'active'.",
+      "rule_type": "CASCADE_ATOMICITY",
+      "severity_on_violation": "high"
     },
     {
       "id": "TM-04",
       "name": "Lost device report must immediately suspend line",
-      "description": "report_lost_device must transition service_status to 'suspended' in the same action plan. A report that leaves the line active is a security/SOP violation. report_outage (the parallel outage scenario) must produce a non-null outage_ticket_id; it does NOT touch service_status and is a separate flow.",
-      "applies_to_actions": ["report_lost_device", "report_outage"],
+      "description": "report_lost_device must transition service_status to 'suspended' in the same action plan. A report that leaves the line active is a security/SOP violation. (Note: TM-07 covers the report_outage scenario separately.)",
+      "applies_to_actions": ["report_lost_device"],
       "requires_slots": ["service_status"],
-      "constraint": "After report_lost_device: service_status == 'suspended'. report_outage is independent of service_status but its outage_ticket_id must be non-null."
+      "constraint": "After report_lost_device: service_status == 'suspended'.",
+      "rule_type": "SECURITY_MANDATORY",
+      "severity_on_violation": "critical"
     },
     {
       "id": "TM-05",
@@ -45,7 +53,9 @@
       "description": "upgrade_device must set device_model, imei, AND device_installment together. Omitting device_installment is a billing-integrity violation.",
       "applies_to_actions": ["upgrade_device"],
       "requires_slots": ["device_model", "imei", "device_installment"],
-      "constraint": "After upgrade_device: device_installment > 0 AND device_model non-null AND imei matches /^\\d{15}$/."
+      "constraint": "After upgrade_device: device_installment > 0 AND device_model non-null AND imei matches /^\\d{15}$/.",
+      "rule_type": "BILLING_INTEGRITY",
+      "severity_on_violation": "high"
     },
     {
       "id": "TM-06",
@@ -53,7 +63,19 @@
       "description": "check_contract_status requires service_status in {'active','suspended'} — it cannot meaningfully return data for a terminated line.",
       "applies_to_actions": ["check_contract_status"],
       "requires_slots": ["service_status", "contract_term"],
-      "constraint": "service_status in {active, suspended} AND contract_term >= 0."
+      "constraint": "service_status in {active, suspended} AND contract_term >= 0.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "medium"
+    },
+    {
+      "id": "TM-07",
+      "name": "Outage report must create outage ticket",
+      "description": "report_outage must produce a non-null outage_ticket_id (back-office control signal) and the ops_team notification. report_outage is independent of service_status (outage is network-side, not customer-side). Empty preconditions are intentional: outage reporting is open to all callers without identity verification (per 2026-07-17 audit decision).",
+      "applies_to_actions": ["report_outage"],
+      "requires_slots": [],
+      "constraint": "After report_outage: outage_ticket_id is non-null AND notify_ops_team signal emitted. service_status is NOT modified.",
+      "rule_type": "BACK_OFFICE_INTEGRITY",
+      "severity_on_violation": "medium"
     }
   ]
 }

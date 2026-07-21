@@ -1,8 +1,8 @@
 {
   "domain": "finance",
   "complexity": "simple",
-  "version": "1.0.0",
-  "description": "Finance domain Simple SOP rules. Each rule states a hard precondition/constraint that a single agent action must satisfy. 7 rules. Slot/action references must resolve against data/slots/finance_slots.json and data/actions/finance_actions.json. Used by T5 (SOP Compliance Discrimination).",
+  "version": "1.1.0",
+  "description": "Finance domain Simple SOP rules. Each rule states a hard precondition/constraint that a single agent action must satisfy. 7 rules. Slot/action references must resolve against data/slots/finance_slots.json and data/actions/finance_actions.json. Used by T5 (SOP Compliance Discrimination). v1.1.0 (2026-07-17 audit): added rule_type + severity_on_violation.",
   "rule_count": 7,
   "rules": [
     {
@@ -11,7 +11,9 @@
       "description": "No account-modifying action may execute before verify_identity has succeeded.",
       "applies_to_actions": ["check_balance", "make_payment", "update_contact_info", "enable_autopay", "disable_autopay", "request_credit_limit_increase", "set_temporary_limit", "report_fraud", "dispute_transaction", "check_dispute_status", "issue_replacement_card", "apply_for_loan", "check_loan_status", "verify_identity_tfa", "request_supervisor_approval"],
       "requires_slots": ["card_last_four", "card_holder_name"],
-      "constraint": "verify_identity MUST appear earlier in the dialogue before any of applies_to_actions."
+      "constraint": "verify_identity MUST appear earlier in the dialogue before any of applies_to_actions.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "critical"
     },
     {
       "id": "FS-02",
@@ -19,7 +21,9 @@
       "description": "disable_autopay must not be invoked unless autopay is currently 'enabled'.",
       "applies_to_actions": ["disable_autopay"],
       "requires_slots": ["autopay"],
-      "constraint": "autopay == 'enabled' before disable_autopay is allowed."
+      "constraint": "autopay == 'enabled' before disable_autopay is allowed.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "medium"
     },
     {
       "id": "FS-03",
@@ -27,7 +31,9 @@
       "description": "The amount passed to make_payment must be > 0 and <= bill_amount.",
       "applies_to_actions": ["make_payment"],
       "requires_slots": ["bill_amount"],
-      "constraint": "0 < payment_amount <= bill_amount."
+      "constraint": "0 < payment_amount <= bill_amount.",
+      "rule_type": "BILLING_INTEGRITY",
+      "severity_on_violation": "high"
     },
     {
       "id": "FS-04",
@@ -35,7 +41,9 @@
       "description": "report_fraud must always carry a positive fraud_amount.",
       "applies_to_actions": ["report_fraud"],
       "requires_slots": ["fraud_amount"],
-      "constraint": "fraud_amount > 0."
+      "constraint": "fraud_amount > 0.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "high"
     },
     {
       "id": "FS-05",
@@ -43,7 +51,9 @@
       "description": "apply_for_loan cannot be submitted with empty loan_purpose.",
       "applies_to_actions": ["apply_for_loan"],
       "requires_slots": ["loan_purpose"],
-      "constraint": "loan_purpose is a non-empty string of length >= 2."
+      "constraint": "loan_purpose is a non-empty string of length >= 2.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "high"
     },
     {
       "id": "FS-06",
@@ -51,7 +61,9 @@
       "description": "check_dispute_status requires an existing fraud_report_id.",
       "applies_to_actions": ["check_dispute_status"],
       "requires_slots": ["fraud_report_id"],
-      "constraint": "fraud_report_id matches /^FR-\\d{8}$/ and report_fraud already executed."
+      "constraint": "fraud_report_id matches /^FR-\\d{8}$/ and report_fraud already executed.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "medium"
     },
     {
       "id": "FS-07",
@@ -59,7 +71,9 @@
       "description": "issue_replacement_card needs a non-empty address for shipping.",
       "applies_to_actions": ["issue_replacement_card"],
       "requires_slots": ["address"],
-      "constraint": "address is a non-empty string of length >= 5."
+      "constraint": "address is a non-empty string of length >= 5.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "medium"
     }
   ]
 }

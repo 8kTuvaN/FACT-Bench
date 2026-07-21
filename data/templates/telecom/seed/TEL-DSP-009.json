@@ -30,5 +30,5 @@
     "billing_amount": 154.30,
     "payment_method": "credit_card"
   },
-  "sop_applicability": {"rules": ["TS-01", "TS-05"]}
+  "sop_applicability": {"rules": ["TS-01", "TS-07"]}
 }

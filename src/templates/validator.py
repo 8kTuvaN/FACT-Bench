@@ -74,6 +74,9 @@ SOP_FILES = {
 SCHEMA_PATH = REPO_ROOT / "src" / "templates" / "schema" / "template_schema.json"
 META_FIELDS_PATH = REPO_ROOT / "data" / "meta_fields" / "meta_fields.json"
 
+# Lazy cache: {rule_id: rule_def}. Populated on first _load_rule_def call.
+_RULE_DEF_CACHE: dict[str, dict] | None = None
+
 ALLOWED_OPS = {"ADD", "MODIFY", "DELETE", "KEEP", "CASCADE"}
 
 
@@ -142,6 +145,19 @@ def _build_sop_index() -> dict[str, str]:
     return idx
 
 
+def _load_rule_def(rid: str) -> dict | None:
+    """Return the full rule definition for `rid`, or None if not found. Cached."""
+    global _RULE_DEF_CACHE
+    if _RULE_DEF_CACHE is None:
+        _RULE_DEF_CACHE = {}
+        for _, paths in SOP_FILES.items():
+            for path in paths:
+                d = _load_json(path)
+                for rule in d.get("rules") or d.get("additional_rules") or []:
+                    _RULE_DEF_CACHE[rule["id"]] = rule
+    return _RULE_DEF_CACHE.get(rid)
+
+
 def _build_meta_field_index() -> dict[str, dict[str, Any]]:
     """Returns {meta_field_name: {category, type, used_by_actions, ...}}.
 
@@ -155,6 +171,28 @@ def _build_meta_field_index() -> dict[str, dict[str, Any]]:
         return {}
     d = _load_json(META_FIELDS_PATH)
     return dict(d.get("meta_fields", {}))
+
+
+def _validate_slot_value(slot_name: str, value: Any, slot_def: dict[str, Any]) -> str | None:
+    """Return error message if `value` violates `slot_def.validation`, else None.
+
+    Validates: regex (for string slots), min/max (for int/float slots), enum.
+    """
+    val = slot_def.get("validation", {})
+    enum = slot_def.get("enum") or val.get("enum")
+    if enum is not None and value not in enum:
+        return f"value {value!r} not in enum {enum}"
+    if "regex" in val and isinstance(value, str):
+        import re
+        if not re.match(val["regex"], value):
+            return f"value {value!r} does not match regex {val['regex']!r}"
+    if "min" in val and isinstance(value, (int, float)):
+        if value < val["min"]:
+            return f"value {value} below min {val['min']}"
+    if "max" in val and isinstance(value, (int, float)):
+        if value > val["max"]:
+            return f"value {value} above max {val['max']}"
+    return None
 
 
 def validate(template: dict[str, Any], errors: list[ValidationError]) -> None:
@@ -188,6 +226,47 @@ def validate(template: dict[str, Any], errors: list[ValidationError]) -> None:
     action_idx = _build_action_index()
     sop_idx = _build_sop_index()
     meta_idx = _build_meta_field_index()
+    # Per-domain slot lookup table for value-level checks
+    slot_table = _load_json(SLOTS_FILES[domain])["slots"]
+
+    # -- 1b. Slot value-level validation (regex / min / max / enum) --
+    for state_field in ("initial_state", "expected_state_after"):
+        state = template.get(state_field, {})
+        for slot_name, value in state.items():
+            if (domain, slot_name) not in slot_idx:
+                continue  # already flagged by name check
+            if value is None:
+                continue
+            slot_def = slot_table.get(slot_name)
+            if slot_def is None:
+                continue
+            err = _validate_slot_value(slot_name, value, slot_def)
+            if err:
+                errors.append(ValidationError(tid, "slot_value", f"{state_field}.{slot_name}: {err}"))
+
+    # -- 1c. agent_paraphrase must differ from user_goal (catches copy-paste) --
+    uis = template.get("user_intent_seed", {})
+    if uis.get("agent_paraphrase") and uis.get("user_goal") and uis["agent_paraphrase"].strip() == uis["user_goal"].strip():
+        errors.append(
+            ValidationError(
+                tid,
+                "user_intent_dup",
+                "user_intent_seed.agent_paraphrase must differ from user_intent_seed.user_goal "
+                "(copy-paste wastes the paraphrase slot)",
+            )
+        )
+
+    # -- 1d. No-op MODIFY (old_value == new_value) is forbidden --
+    for o in template.get("state_operations", []):
+        if o.get("op") == "MODIFY" and o.get("old_value") == o.get("new_value"):
+            errors.append(
+                ValidationError(
+                    tid,
+                    "noop_modify",
+                    f"MODIFY on slot '{o.get('slot')}' has identical old_value and new_value "
+                    f"(should be ADD, DELETE, or actual change)",
+                )
+            )
 
     # -- 2. Slot-name resolution --
     init = template.get("initial_state", {})
@@ -332,6 +411,22 @@ def validate(template: dict[str, Any], errors: list[ValidationError]) -> None:
                 ValidationError(
                     tid, "sop_ref", f"SOP rule '{rid}' belongs to {sop_idx[rid]}, not {domain}"
                 )
+            )
+
+    # -- 7b. SOP rule metadata: referenced rules must have rule_type + severity_on_violation --
+    #         (Lazy-validated here, not on the SOP files themselves, because the
+    #          template validator is the only consumer that walks SOP refs.)
+    for rid in (template.get("sop_applicability") or {}).get("rules", []):
+        rule_def = _load_rule_def(rid)
+        if rule_def is None:
+            continue
+        if "rule_type" not in rule_def:
+            errors.append(
+                ValidationError(tid, "sop_rule_metadata", f"SOP rule '{rid}' is missing rule_type field")
+            )
+        if "severity_on_violation" not in rule_def:
+            errors.append(
+                ValidationError(tid, "sop_rule_metadata", f"SOP rule '{rid}' is missing severity_on_violation field")
             )
 
     # -- 8. State consistency (lightweight) --

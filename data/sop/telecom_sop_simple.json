@@ -1,9 +1,9 @@
 {
   "domain": "telecom",
   "complexity": "simple",
-  "version": "1.0.0",
-  "description": "Telecom domain Simple SOP rules. Each rule states a hard precondition/constraint that a single agent action must satisfy. 6 rules. Slot/action references must resolve against data/slots/telecom_slots.json and data/actions/telecom_actions.json. Used by T5 (SCD).",
-  "rule_count": 6,
+  "version": "1.1.0",
+  "description": "Telecom domain Simple SOP rules. Each rule states a hard precondition/constraint that a single agent action must satisfy. 7 rules. Slot/action references must resolve against data/slots/telecom_slots.json and data/actions/telecom_actions.json. Used by T5 (SCD). v1.1.0 (2026-07-17 audit): added TS-07 for dispute_bill; added rule_type + severity_on_violation.",
+  "rule_count": 7,
   "rules": [
     {
       "id": "TS-01",
@@ -11,7 +11,9 @@
       "description": "No account-modifying action may execute before verify_identity has succeeded.",
       "applies_to_actions": ["check_data_usage", "change_plan", "add_addon", "remove_addon", "update_contact_info", "suspend_service", "resume_service", "activate_device", "report_lost_device", "upgrade_device", "pay_bill", "change_billing_cycle", "check_contract_status", "dispute_bill"],
       "requires_slots": ["phone"],
-      "constraint": "verify_identity MUST appear earlier in the dialogue before any of applies_to_actions."
+      "constraint": "verify_identity MUST appear earlier in the dialogue before any of applies_to_actions.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "critical"
     },
     {
       "id": "TS-02",
@@ -19,7 +21,9 @@
       "description": "remove_addon must not be invoked unless the named addon is currently active (addon_status='active').",
       "applies_to_actions": ["remove_addon"],
       "requires_slots": ["addon_name", "addon_status"],
-      "constraint": "addon_status == 'active' for the target addon_name before remove_addon is allowed."
+      "constraint": "addon_status == 'active' for the target addon_name before remove_addon is allowed.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "high"
     },
     {
       "id": "TS-03",
@@ -27,7 +31,9 @@
       "description": "resume_service must not be invoked unless service_status is currently 'suspended'.",
       "applies_to_actions": ["resume_service"],
       "requires_slots": ["service_status"],
-      "constraint": "service_status == 'suspended' before resume_service is allowed."
+      "constraint": "service_status == 'suspended' before resume_service is allowed.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "medium"
     },
     {
       "id": "TS-04",
@@ -35,7 +41,9 @@
       "description": "activate_device must carry a 15-digit IMEI and a non-empty device_model.",
       "applies_to_actions": ["activate_device"],
       "requires_slots": ["imei", "device_model"],
-      "constraint": "imei matches /^\\d{15}$/ and device_model is a non-empty string."
+      "constraint": "imei matches /^\\d{15}$/ and device_model is a non-empty string.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "high"
     },
     {
       "id": "TS-05",
@@ -43,7 +51,9 @@
       "description": "pay_bill amount must be > 0 and <= billing_amount.",
       "applies_to_actions": ["pay_bill"],
       "requires_slots": ["billing_amount"],
-      "constraint": "0 < payment_amount <= billing_amount."
+      "constraint": "0 < payment_amount <= billing_amount.",
+      "rule_type": "BILLING_INTEGRITY",
+      "severity_on_violation": "high"
     },
     {
       "id": "TS-06",
@@ -51,7 +61,19 @@
       "description": "change_billing_cycle must not be invoked unless payment_method is already set on the account.",
       "applies_to_actions": ["change_billing_cycle"],
       "requires_slots": ["payment_method"],
-      "constraint": "payment_method is non-null before change_billing_cycle is allowed."
+      "constraint": "payment_method is non-null before change_billing_cycle is allowed.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "medium"
+    },
+    {
+      "id": "TS-07",
+      "name": "Bill dispute requires reported reason",
+      "description": "dispute_bill must carry a non-empty dispute_reason (telecom meta-field) and a non-null billing_amount.",
+      "applies_to_actions": ["dispute_bill"],
+      "requires_slots": ["billing_amount"],
+      "constraint": "dispute_reason is non-empty string AND billing_amount > 0.",
+      "rule_type": "PRECONDITION_GUARD",
+      "severity_on_violation": "medium"
     }
   ]
 }

@@ -7,9 +7,9 @@ Per plan.md Day 10:
   - Total ~87 templates
 
 For each sampled template, run automated + heuristic checks aligned with
-audit_checklist.md. The output is a per-template PASS/FAIL/FLAG record plus
-a final markdown report at paper/audit_report.md. The report is meant for
-human review; this script does NOT modify any data files.
+the validator's 8-rule rule set. The output is a per-template PASS/FAIL/FLAG
+record plus a final markdown report at paper/audit_report.md. The report is
+meant for human review; this script does NOT modify any data files.
 
 Automated checks (already enforced by validator where applicable):
   A1. Every state_operations slot is present in initial_state OR is

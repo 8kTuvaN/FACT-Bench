@@ -3,7 +3,7 @@
 _Generated: 2026-07-22T01:44:51.485018+00:00_
 _Sample seed: `20260717` (reproducible)_
 _Validator: `src/templates/validator.py` v1.1.0 (auto-checks 8 rules)_
-_Auditor: FACT-Bench audit pipeline (heuristic + automated checks)_
+_Pipeline: `src/templates/audit.py` (heuristic + automated checks)_
 
 ## 1. Scope
 

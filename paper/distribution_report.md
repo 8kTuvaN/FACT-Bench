@@ -1,6 +1,6 @@
 # FACT-Bench — Day 11 Distribution Check Report
 
-_Generated: 2026-07-21T08:37:03.333667+00:00_
+_Generated: 2026-07-22T01:37:46.651287+00:00_
 _Total templates: 300 (300 target)_
 _Total ops: 1278_
 
@@ -32,19 +32,19 @@ Threshold (per plan.md Day 11): each slot >= 5 non-KEEP uses.
 | Slot | Non-KEEP | Total | Status |
 |---|---|---|---|
 | address | 11 | 22 | OK |
-| autopay | 20 | 23 | OK |
-| autopay_bank | 22 | 26 | OK |
-| autopay_date | 22 | 31 | OK |
+| autopay | 14 | 23 | OK |
+| autopay_bank | 16 | 26 | OK |
+| autopay_date | 16 | 31 | OK |
 | bill_amount | 10 | 19 | OK |
 | card_holder_name | 14 | 49 | OK |
 | card_last_four | 17 | 51 | OK |
 | card_type | 9 | 14 | OK |
 | credit_limit | 11 | 19 | OK |
-| dispute_status | 31 | 27 | OK |
+| dispute_status | 20 | 27 | OK |
 | due_date | 7 | 23 | OK |
 | email | 18 | 52 | OK |
-| fraud_amount | 32 | 31 | OK |
-| fraud_report_id | 28 | 28 | OK |
+| fraud_amount | 21 | 31 | OK |
+| fraud_report_id | 17 | 28 | OK |
 | income | 3 | 11 | UNDER |
 | loan_amount | 9 | 21 | OK |
 | loan_purpose | 11 | 20 | OK |
@@ -58,24 +58,24 @@ Threshold (per plan.md Day 11): each slot >= 5 non-KEEP uses.
 
 | Slot | Non-KEEP | Total | Status |
 |---|---|---|---|
-| activation_date | 29 | 31 | OK |
-| addon_name | 28 | 31 | OK |
-| addon_price | 23 | 28 | OK |
-| addon_status | 24 | 31 | OK |
+| activation_date | 20 | 31 | OK |
+| addon_name | 22 | 31 | OK |
+| addon_price | 17 | 28 | OK |
+| addon_status | 18 | 31 | OK |
 | address | 16 | 50 | OK |
 | billing_amount | 12 | 25 | OK |
 | billing_cycle | 13 | 22 | OK |
-| contract_term | 24 | 26 | OK |
-| data_allowance | 20 | 35 | OK |
-| device_installment | 24 | 26 | OK |
-| device_model | 29 | 32 | OK |
+| contract_term | 15 | 26 | OK |
+| data_allowance | 14 | 35 | OK |
+| device_installment | 15 | 26 | OK |
+| device_model | 20 | 32 | OK |
 | email | 15 | 48 | OK |
-| imei | 25 | 24 | OK |
+| imei | 16 | 24 | OK |
 | payment_method | 19 | 50 | OK |
 | phone | 13 | 47 | OK |
-| plan_name | 26 | 57 | OK |
-| plan_price | 24 | 32 | OK |
-| service_status | 30 | 30 | OK |
+| plan_name | 20 | 57 | OK |
+| plan_price | 18 | 32 | OK |
+| service_status | 21 | 30 | OK |
 
 ### Slot coverage recommendations
 

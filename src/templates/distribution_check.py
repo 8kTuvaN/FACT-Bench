@@ -103,22 +103,41 @@ def kl_divergence(p: dict[str, float], q: dict[str, float]) -> float:
 
 
 def slot_coverage(tpls: list[dict[str, Any]], domain: str, slot_set: set[str]) -> dict[str, dict[str, int]]:
-    """{slot: {non_keep, total}} for the given domain."""
+    """{slot: {non_keep, total}} for the given domain.
+
+    Invariant: non_keep <= total (active ops <= active+KEEP ops for the slot).
+    CASCADE is a grouping marker, not an op type — its members count toward
+    non_keep ONLY when an individual ADD/MODIFY/DELETE entry is also present
+    (per validator's cascade_op_coverage rule). Without an individual entry,
+    the CASCADE alone is not enough to count as "actively changed".
+    """
     out = {s: {"non_keep": 0, "total": 0} for s in slot_set}
     for t in tpls:
         if t.get("domain") != domain:
             continue
-        for op in t.get("state_operations", []):
+        ops = t.get("state_operations", [])
+        # Precompute the set of slots that have an individual active op
+        # (ADD/MODIFY/DELETE) in this template. CASCADE slots only count
+        # toward non_keep if they are also in this set.
+        individually_active = {
+            o.get("slot")
+            for o in ops
+            if o.get("op") in ("ADD", "MODIFY", "DELETE") and o.get("slot") in slot_set
+        }
+        for op in ops:
+            o_slot = op.get("slot")
             if op.get("op") == "CASCADE":
-                for s in op.get("slots") or []:
-                    if s in out:
-                        out[s]["non_keep"] += 1
-            elif op.get("op") != "CASCADE" and op.get("slot") in out:
-                if op.get("op") != "KEEP":
-                    out[op["slot"]]["non_keep"] += 1
-                out[op["slot"]]["total"] += 1
-            elif op.get("op") == "KEEP" and op.get("slot") in out:
-                out[op["slot"]]["total"] += 1
+                # CASCADE is a grouping marker — do NOT increment any counter
+                # for its members directly. Members get counted via their
+                # individual ADD/MODIFY/DELETE/KEEP entries below.
+                continue
+            if o_slot not in out:
+                continue
+            if op.get("op") == "KEEP":
+                out[o_slot]["total"] += 1
+            elif op.get("op") in ("ADD", "MODIFY", "DELETE"):
+                out[o_slot]["non_keep"] += 1
+                out[o_slot]["total"] += 1
     return out
 
 

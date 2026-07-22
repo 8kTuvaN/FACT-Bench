@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-21T08:37:03.335673+00:00",
+  "generated_at": "2026-07-22T01:37:46.652759+00:00",
   "generator": "src/templates/distribution_check.py",
   "total_templates": 300,
   "by_domain": {
@@ -116,167 +116,167 @@
   },
   "slot_coverage": {
     "finance": {
-      "dispute_status": {
-        "non_keep_uses": 31,
-        "total_uses": 27
-      },
       "email": {
         "non_keep_uses": 18,
         "total_uses": 52
       },
-      "credit_limit": {
-        "non_keep_uses": 11,
-        "total_uses": 19
-      },
-      "loan_term": {
-        "non_keep_uses": 13,
-        "total_uses": 18
-      },
-      "income": {
-        "non_keep_uses": 3,
-        "total_uses": 11
-      },
-      "autopay": {
-        "non_keep_uses": 20,
-        "total_uses": 23
-      },
-      "card_last_four": {
-        "non_keep_uses": 17,
-        "total_uses": 51
-      },
-      "bill_amount": {
-        "non_keep_uses": 10,
-        "total_uses": 19
-      },
-      "temp_limit": {
-        "non_keep_uses": 9,
-        "total_uses": 24
-      },
-      "card_type": {
-        "non_keep_uses": 9,
-        "total_uses": 14
-      },
       "loan_purpose": {
         "non_keep_uses": 11,
-        "total_uses": 20
-      },
-      "address": {
-        "non_keep_uses": 11,
-        "total_uses": 22
-      },
-      "fraud_report_id": {
-        "non_keep_uses": 28,
-        "total_uses": 28
-      },
-      "phone": {
-        "non_keep_uses": 19,
-        "total_uses": 55
-      },
-      "card_holder_name": {
-        "non_keep_uses": 14,
-        "total_uses": 49
-      },
-      "fraud_amount": {
-        "non_keep_uses": 32,
-        "total_uses": 31
-      },
-      "autopay_bank": {
-        "non_keep_uses": 22,
-        "total_uses": 26
-      },
-      "autopay_date": {
-        "non_keep_uses": 22,
-        "total_uses": 31
-      },
-      "minimum_payment": {
-        "non_keep_uses": 13,
         "total_uses": 20
       },
       "due_date": {
         "non_keep_uses": 7,
         "total_uses": 23
       },
-      "loan_amount": {
+      "address": {
+        "non_keep_uses": 11,
+        "total_uses": 22
+      },
+      "card_type": {
         "non_keep_uses": 9,
-        "total_uses": 21
+        "total_uses": 14
+      },
+      "credit_limit": {
+        "non_keep_uses": 11,
+        "total_uses": 19
+      },
+      "bill_amount": {
+        "non_keep_uses": 10,
+        "total_uses": 19
       },
       "occupation": {
         "non_keep_uses": 8,
         "total_uses": 22
+      },
+      "dispute_status": {
+        "non_keep_uses": 20,
+        "total_uses": 27
+      },
+      "autopay_bank": {
+        "non_keep_uses": 16,
+        "total_uses": 26
+      },
+      "loan_term": {
+        "non_keep_uses": 13,
+        "total_uses": 18
+      },
+      "card_last_four": {
+        "non_keep_uses": 17,
+        "total_uses": 51
+      },
+      "autopay": {
+        "non_keep_uses": 14,
+        "total_uses": 23
+      },
+      "fraud_report_id": {
+        "non_keep_uses": 17,
+        "total_uses": 28
+      },
+      "autopay_date": {
+        "non_keep_uses": 16,
+        "total_uses": 31
+      },
+      "loan_amount": {
+        "non_keep_uses": 9,
+        "total_uses": 21
+      },
+      "minimum_payment": {
+        "non_keep_uses": 13,
+        "total_uses": 20
+      },
+      "card_holder_name": {
+        "non_keep_uses": 14,
+        "total_uses": 49
+      },
+      "phone": {
+        "non_keep_uses": 19,
+        "total_uses": 55
+      },
+      "income": {
+        "non_keep_uses": 3,
+        "total_uses": 11
+      },
+      "fraud_amount": {
+        "non_keep_uses": 21,
+        "total_uses": 31
+      },
+      "temp_limit": {
+        "non_keep_uses": 9,
+        "total_uses": 24
       }
     },
     "telecom": {
-      "activation_date": {
-        "non_keep_uses": 29,
-        "total_uses": 31
+      "email": {
+        "non_keep_uses": 15,
+        "total_uses": 48
       },
-      "contract_term": {
-        "non_keep_uses": 24,
+      "device_installment": {
+        "non_keep_uses": 15,
         "total_uses": 26
       },
-      "billing_cycle": {
-        "non_keep_uses": 13,
-        "total_uses": 22
-      },
-      "data_allowance": {
-        "non_keep_uses": 20,
-        "total_uses": 35
-      },
       "addon_price": {
-        "non_keep_uses": 23,
+        "non_keep_uses": 17,
         "total_uses": 28
       },
       "address": {
         "non_keep_uses": 16,
         "total_uses": 50
       },
-      "addon_name": {
-        "non_keep_uses": 28,
-        "total_uses": 31
+      "plan_name": {
+        "non_keep_uses": 20,
+        "total_uses": 57
       },
-      "email": {
-        "non_keep_uses": 15,
-        "total_uses": 48
+      "imei": {
+        "non_keep_uses": 16,
+        "total_uses": 24
       },
       "service_status": {
-        "non_keep_uses": 30,
+        "non_keep_uses": 21,
         "total_uses": 30
       },
-      "plan_name": {
-        "non_keep_uses": 26,
-        "total_uses": 57
+      "activation_date": {
+        "non_keep_uses": 20,
+        "total_uses": 31
+      },
+      "plan_price": {
+        "non_keep_uses": 18,
+        "total_uses": 32
+      },
+      "data_allowance": {
+        "non_keep_uses": 14,
+        "total_uses": 35
+      },
+      "addon_status": {
+        "non_keep_uses": 18,
+        "total_uses": 31
+      },
+      "billing_amount": {
+        "non_keep_uses": 12,
+        "total_uses": 25
+      },
+      "billing_cycle": {
+        "non_keep_uses": 13,
+        "total_uses": 22
+      },
+      "addon_name": {
+        "non_keep_uses": 22,
+        "total_uses": 31
+      },
+      "contract_term": {
+        "non_keep_uses": 15,
+        "total_uses": 26
       },
       "phone": {
         "non_keep_uses": 13,
         "total_uses": 47
       },
-      "device_installment": {
-        "non_keep_uses": 24,
-        "total_uses": 26
-      },
       "payment_method": {
         "non_keep_uses": 19,
         "total_uses": 50
       },
-      "imei": {
-        "non_keep_uses": 25,
-        "total_uses": 24
-      },
-      "addon_status": {
-        "non_keep_uses": 24,
-        "total_uses": 31
-      },
       "device_model": {
-        "non_keep_uses": 29,
+        "non_keep_uses": 20,
         "total_uses": 32
-      },
-      "plan_price": {
-        "non_keep_uses": 24,
-        "total_uses": 32
-      },
-      "billing_amount": {
-        "non_keep_uses": 12,
-        "total_uses": 25
       }
     }
   },

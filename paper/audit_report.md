@@ -1,9 +1,9 @@
 # FACT-Bench — Day 10 Manual Audit Report
 
-_Generated: 2026-07-21T08:14:06.181538+00:00_
+_Generated: 2026-07-22T01:44:51.485018+00:00_
 _Sample seed: `20260717` (reproducible)_
 _Validator: `src/templates/validator.py` v1.1.0 (auto-checks 8 rules)_
-_Auditor: researcher session (heuristic + automated checks)_
+_Auditor: FACT-Bench audit pipeline (heuristic + automated checks)_
 
 ## 1. Scope
 

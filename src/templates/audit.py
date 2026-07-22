@@ -384,7 +384,7 @@ def main() -> int:
     lines.append(f"_Generated: {datetime.now(timezone.utc).isoformat()}_")
     lines.append(f"_Sample seed: `{args.seed}` (reproducible)_")
     lines.append(f"_Validator: `src/templates/validator.py` v1.1.0 (auto-checks 8 rules)_")
-    lines.append(f"_Auditor: researcher session (heuristic + automated checks)_")
+    lines.append("_Auditor: FACT-Bench audit pipeline (heuristic + automated checks)_")
     lines.append("")
     lines.append("## 1. Scope")
     lines.append("")
